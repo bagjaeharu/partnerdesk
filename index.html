@@ -476,16 +476,21 @@ async function doRegister() {
   if (id === MASTER.id){ toast('이미 사용 중인 아이디입니다','error'); return; }
 
   load(true, '중복 확인 중...');
-  // 이미 존재하는 아이디인지 Firebase에서 직접 확인
-  const [existUser, existPend] = await Promise.all([fbGet(`users/${id}`), fbGet(`pending/${id}`)]);
-  if (existUser || existPend) { load(false); toast('이미 사용 중인 아이디입니다','error'); return; }
+  try {
+    const [existUser, existPend] = await Promise.all([fbGet(`users/${id}`), fbGet(`pending/${id}`)]);
+    if (existUser || existPend) { load(false); toast('이미 사용 중인 아이디입니다','error'); return; }
 
-  const uid = Date.now();
-  const data = { id, pw, name, company, email, role: ROLE_MAP[company]||'requester', requestedAt: new Date().toLocaleString('ko-KR'), uid };
-  await fbSet(`pending/${id}`, data);   // 아이디를 key로 저장
-  load(false);
-  toast('가입 신청이 완료되었습니다!', 'success');
-  showWrap('wrap-pending');
+    const uid  = Date.now();
+    const data = { id, pw, name, company, email, role: ROLE_MAP[company]||'requester', requestedAt: new Date().toLocaleString('ko-KR'), uid };
+    await fbSet(`pending/${id}`, data);
+    load(false);
+    toast('가입 신청이 완료되었습니다!', 'success');
+    showWrap('wrap-pending');
+  } catch(err) {
+    load(false);
+    console.error('회원가입 오류:', err);
+    toast('가입 신청 중 오류가 발생했습니다. Firebase 보안 규칙을 확인해주세요.', 'error');
+  }
 }
 
 /* ══════════════════════════════════════
