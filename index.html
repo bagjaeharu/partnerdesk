@@ -241,7 +241,7 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
       </div>
       <div class="card"><div class="card-title">내 요청 내역</div><div id="my-req-list"></div></div>
     </div>
-    <!-- 수신 페이지 -->
+    <!-- 수신 페이지 (SKM / 이모션용) -->
     <div id="page-receive" class="page">
       <div class="page-header"><div class="page-title">수신 요청 목록</div><div class="page-desc">접수된 요청을 확인하고 처리합니다</div></div>
       <div class="stat-grid">
@@ -250,6 +250,16 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
         <div class="stat-card"><div class="stat-label">완료</div><div class="stat-value" id="st-done" style="color:var(--green)">0</div></div>
       </div>
       <div class="card"><div class="card-title">요청 목록</div><div id="recv-list"></div></div>
+    </div>
+    <!-- PS&M 수신 페이지 (PSNM 계정 전용) -->
+    <div id="page-psm-receive" class="page">
+      <div class="page-header"><div class="page-title">PS&amp;M 수신 목록</div><div class="page-desc">PS&amp;M으로 접수된 요청을 확인하고 처리합니다</div></div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">전체 요청</div><div class="stat-value" id="psm-st-total">0</div></div>
+        <div class="stat-card"><div class="stat-label">처리 중</div><div class="stat-value" id="psm-st-pend" style="color:var(--coral)">0</div></div>
+        <div class="stat-card"><div class="stat-label">완료</div><div class="stat-value" id="psm-st-done" style="color:var(--green)">0</div></div>
+      </div>
+      <div class="card"><div class="card-title">요청 목록</div><div id="psm-recv-list"></div></div>
     </div>
     <!-- 관리자 페이지 -->
     <div id="page-manage" class="page">
@@ -344,7 +354,7 @@ const db  = getDatabase(app);
 const MASTER = { id:'2009607', pw:'2009607', name:'PS&M 관리자', company:'PSM', role:'manager', email:'2009607@skpsnm.com', isMaster:true, approvedAt:'마스터 계정' };
 const REQ_TYPES  = { SKM:['쿠폰재발송','오류문의'], 이모션:['이벤트 응모내역 확인','마케팅동의 제외'], PSM:['일반문의','기타요청'] };
 const RECV_EMAILS= { SKM:['meehyun@mnservice.co.kr','irene@mnservice.co.kr','ina@mnservice.co.kr'], 이모션:['jieun.lee@emotion.co.kr','eunyoung.sa@emotion.co.kr','ain.lee@emotion.co.kr','TDS@emotion.co.kr'], PSM:['2009607@skpsnm.com'] };
-const ROLE_MAP   = { ACE:'requester', TOP:'requester', SKM:'receiver', '이모션':'receiver', PSM:'manager', PSNM:'psmviewer' };
+const ROLE_MAP   = { ACE:'requester', TOP:'requester', SKM:'receiver', '이모션':'receiver', PSM:'manager', PSNM:'psm_receiver' };
 const CO_MAP     = { ACE:'ACE', TOP:'TOP', SKM:'SK M&Service', PSM:'PS&M', '이모션':'이모션', PSNM:'PS&M' };
 
 /* ════════════════════════════════════════════════
@@ -374,7 +384,7 @@ async function gasSendEmail({ to, subject, body }) {
 }
 
 /**
- * ① 요청 접수 시 → 수신사(SK M&Service / 이모션) 담당자들에게 알림
+ * ① 요청 접수 시 → 수신사(SK M&Service / 이모션 / PS&M) 담당자들에게 알림
  */
 async function sendRequestNotification(req) {
   const receiverName = CO_MAP[req.receiver] || req.receiver;
@@ -401,7 +411,7 @@ PS&M PartnerDesk`;
 }
 
 /**
- * ② 완료 처리 시 → 요청자(ACE / TOP) 담당자에게 알림
+ * ② 완료 처리 시 → 요청자(ACE / TOP / PSNM 등) 담당자에게 알림
  */
 async function sendCompleteNotification(req, note, completedAt) {
   const receiverName = CO_MAP[req.receiver] || req.receiver;
@@ -550,13 +560,13 @@ function doLogout() {
    앱 진입 + 실시간 구독 시작
 ══════════════════════════════════════ */
 const NAV = {
-  requester: [{ id:'page-request', label:'요청하기',       icon:'📤' }],
-  receiver:  [{ id:'page-receive', label:'수신 요청 목록', icon:'📋' }],
-  manager:   [{ id:'page-manage',  label:'관리자 페이지',  icon:'⚙️' }],
-  psmviewer: [
-    { id:'page-request', label:'요청하기',       icon:'📤' },
-    { id:'page-receive', label:'수신 요청 목록', icon:'📋' },
-    { id:'page-manage',  label:'전체 현황',      icon:'📊' },
+  requester:    [{ id:'page-request',  label:'요청하기',       icon:'📤' }],
+  receiver:     [{ id:'page-receive',  label:'수신 요청 목록', icon:'📋' }],
+  manager:      [{ id:'page-manage',   label:'관리자 페이지',  icon:'⚙️' }],
+  psm_receiver: [
+    { id:'page-request',     label:'요청하기',       icon:'📤' },
+    { id:'page-psm-receive', label:'PS&M 수신 목록', icon:'📋' },
+    { id:'page-manage',      label:'전체 현황',      icon:'📊' },
   ],
 };
 
@@ -566,9 +576,9 @@ function enterApp() {
   el('s-name').textContent    = CU.name;
   el('s-company').textContent = CO_MAP[CU.company] || CU.company;
 
-  // psmviewer는 회원관리 탭 숨김
+  // psm_receiver는 회원관리 탭 숨김
   const memberTab = document.querySelector('.tab-btn[onclick*="t-members"]');
-  if (memberTab) memberTab.style.display = CU.role === 'psmviewer' ? 'none' : '';
+  if (memberTab) memberTab.style.display = CU.role === 'psm_receiver' ? 'none' : '';
 
   const nav = el('s-nav'); nav.innerHTML = '';
   NAV[CU.role].forEach((item, i) => {
@@ -580,16 +590,12 @@ function enterApp() {
   });
   switchPage(NAV[CU.role][0].id);
 
-  // psmviewer용 페이지 타이틀 분기
-  if (CU.role === 'psmviewer') {
+  // psm_receiver용 페이지 타이틀 분기
+  if (CU.role === 'psm_receiver') {
     const manageTitle = document.querySelector('#page-manage .page-title');
     const manageDesc  = document.querySelector('#page-manage .page-desc');
     if (manageTitle) manageTitle.textContent = '전체 현황';
     if (manageDesc)  manageDesc.textContent  = '전체 요청 현황을 확인합니다';
-    const recvTitle = document.querySelector('#page-receive .page-title');
-    const recvDesc  = document.querySelector('#page-receive .page-desc');
-    if (recvTitle) recvTitle.textContent = '전체 수신 요청 목록';
-    if (recvDesc)  recvDesc.textContent  = '모든 협력사의 요청을 확인합니다';
   }
 
   // ★ 실시간 구독: requests 변경 시 자동 갱신
@@ -603,7 +609,6 @@ function enterApp() {
     window._pending = o2arr(snap.exists() ? snap.val() : {});
     updateBadge();
     if (CU.role === 'manager') renderMembers();
-    // psmviewer는 회원관리 불필요 → renderMembers 생략
   });
   unsubs = [() => off(dbRef('requests'), 'value', reqUnsub),
             () => off(dbRef('pending'),  'value', pendUnsub)];
@@ -627,13 +632,13 @@ function switchTab(tid, btn) {
 function refreshRequests() {
   if (!CU) return;
   const reqs = window._requests || [];
-  if (CU.role === 'requester') renderMyReqs(reqs);
-  if (CU.role === 'receiver')  renderRecv(reqs);
-  if (CU.role === 'manager')   renderManage(reqs);
-  if (CU.role === 'psmviewer') {
+  if (CU.role === 'requester')    renderMyReqs(reqs);
+  if (CU.role === 'receiver')     renderRecv(reqs);
+  if (CU.role === 'manager')      renderManage(reqs);
+  if (CU.role === 'psm_receiver') {
     renderMyReqs(reqs);
-    renderRecvAll(reqs);   // 전체 수신목록 (회사 필터 없음)
-    renderManage(reqs);
+    renderPsmRecv(reqs);  // PS&M으로 온 요청 수신+완료처리
+    renderManage(reqs);   // 전체 현황 (회원관리 탭 없음)
   }
 }
 
@@ -719,25 +724,28 @@ function renderRecv(reqs) {
   </tr>`).join('')}</tbody></table></div>`;
 }
 
-/* psmviewer 전용 — 전체 수신목록 (모든 수신사) */
-function renderRecvAll(reqs) {
-  const done = reqs.filter(r => r.status === '완료').length;
-  el('st-total').textContent = reqs.length;
-  el('st-pend').textContent  = reqs.length - done;
-  el('st-done').textContent  = done;
-  const list = el('recv-list');
-  if (!reqs.length) { list.innerHTML = empty('✅','현재 접수된 요청이 없습니다'); return; }
+/* PS&M 수신처리 전용 — receiver=PSM 인 요청만, 완료처리 가능 */
+function renderPsmRecv(reqs) {
+  const mine = reqs.filter(r => r.receiver === 'PSM');
+  const done = mine.filter(r => r.status === '완료').length;
+  el('psm-st-total').textContent = mine.length;
+  el('psm-st-pend').textContent  = mine.length - done;
+  el('psm-st-done').textContent  = done;
+  const list = el('psm-recv-list');
+  if (!mine.length) { list.innerHTML = empty('✅','PS&M으로 접수된 요청이 없습니다'); return; }
   list.innerHTML = `<div class="tbl-wrap"><table class="req-table"><thead><tr>
-    <th>요청일시</th><th>발신업체</th><th>담당자</th><th>수신사</th><th>요청종류</th><th>요청내용</th><th>상태</th><th>완료내용</th>
-  </tr></thead><tbody>${reqs.map(r=>`<tr>
+    <th>요청일시</th><th>발신업체</th><th>담당자</th><th>요청종류</th><th>요청내용</th><th>고객정보</th><th>상태</th><th>처리</th>
+  </tr></thead><tbody>${mine.map(r=>`<tr>
     <td style="font-size:12px;color:var(--gray-500);white-space:nowrap">${r.createdAt}</td>
     <td>${badge('badge-coral', r.senderCompany)}</td>
     <td style="font-size:13px">${r.sender}</td>
-    <td>${badge('badge-blue', CO_MAP[r.receiver]||r.receiver)}</td>
     <td style="white-space:nowrap">${r.type}</td>
-    <td style="max-width:150px;font-size:13px">${r.detail}</td>
+    <td style="max-width:180px;font-size:13px">${r.detail}</td>
+    <td style="font-size:12px;color:var(--gray-500)">${r.customer||'-'}</td>
     <td>${statusBadge(r.status)}</td>
-    <td style="font-size:12px;color:var(--gray-500);max-width:110px">${r.note||'-'}</td>
+    <td>${r.status !== '완료'
+      ? `<button class="btn-sm btn-complete" onclick="window._openComplete(${r.id})">완료처리</button>`
+      : `<span style="font-size:12px;color:var(--gray-500)">${r.note}</span>`}</td>
   </tr>`).join('')}</tbody></table></div>`;
 }
 
