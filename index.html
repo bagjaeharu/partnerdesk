@@ -170,7 +170,7 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
           <option value="TOP">TOP</option>
           <option value="SKM">SK M&amp;Service</option>
           <option value="이모션">이모션</option>
-          <option value="PSMV">PS&amp;M</option>
+          <option value="PSNM">PS&amp;M</option>
         </select>
       </div>
       <div class="field"><label>담당자명</label><input type="text" id="reg-name" placeholder="이름 입력" /></div>
@@ -268,7 +268,7 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
             <div class="card-title" style="margin-bottom:0">전체 요청/처리 내역</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-              <select id="f-company" onchange="renderManage()" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white"><option value="">전체 업체</option><option value="ACE">ACE</option><option value="TOP">TOP</option><option value="SKM">SK M&amp;Service</option><option value="이모션">이모션</option><option value="PSM">PS&amp;M</option><option value="PSMV">PS&amp;M(뷰어)</option></select>
+              <select id="f-company" onchange="renderManage()" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white"><option value="">전체 업체</option><option value="ACE">ACE</option><option value="TOP">TOP</option><option value="SKM">SK M&amp;Service</option><option value="이모션">이모션</option><option value="PSM">PS&amp;M</option><option value="PSNM">PS&amp;M(뷰어)</option></select>
               <select id="f-type" onchange="renderManage()" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white"><option value="">전체 종류</option><option value="쿠폰재발송">쿠폰재발송</option><option value="오류문의">오류문의</option><option value="이벤트 응모내역 확인">이벤트 응모내역 확인</option><option value="마케팅동의 제외">마케팅동의 제외</option><option value="일반문의">일반문의</option><option value="기타요청">기타요청</option></select>
               <select id="f-status" onchange="renderManage()" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white"><option value="">전체 상태</option><option value="처리중">처리중</option><option value="완료">완료</option></select>
               <button onclick="resetFilters()" style="padding:7px 14px;background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">초기화</button>
@@ -344,8 +344,8 @@ const db  = getDatabase(app);
 const MASTER = { id:'2009607', pw:'2009607', name:'PS&M 관리자', company:'PSM', role:'manager', email:'2009607@skpsnm.com', isMaster:true, approvedAt:'마스터 계정' };
 const REQ_TYPES  = { SKM:['쿠폰재발송','오류문의'], 이모션:['이벤트 응모내역 확인','마케팅동의 제외'], PSM:['일반문의','기타요청'] };
 const RECV_EMAILS= { SKM:['meehyun@mnservice.co.kr','irene@mnservice.co.kr','ina@mnservice.co.kr'], 이모션:['jieun.lee@emotion.co.kr','eunyoung.sa@emotion.co.kr','ain.lee@emotion.co.kr','TDS@emotion.co.kr'], PSM:['2009607@skpsnm.com'] };
-const ROLE_MAP   = { ACE:'requester', TOP:'requester', SKM:'receiver', '이모션':'receiver', PSM:'manager', PSMV:'psmviewer' };
-const CO_MAP     = { ACE:'ACE', TOP:'TOP', SKM:'SK M&Service', PSM:'PS&M', '이모션':'이모션', PSMV:'PS&M' };
+const ROLE_MAP   = { ACE:'requester', TOP:'requester', SKM:'receiver', '이모션':'receiver', PSM:'manager', PSNM:'psmviewer' };
+const CO_MAP     = { ACE:'ACE', TOP:'TOP', SKM:'SK M&Service', PSM:'PS&M', '이모션':'이모션', PSNM:'PS&M' };
 
 /* ════════════════════════════════════════════════
    Google Apps Script 이메일 발송
