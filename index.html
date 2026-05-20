@@ -352,10 +352,37 @@ const db  = getDatabase(app);
 
 /* ── 상수 ── */
 const MASTER = { id:'2009607', pw:'2009607', name:'PS&M 관리자', company:'PSM', role:'manager', email:'2009607@skpsnm.com', isMaster:true, approvedAt:'마스터 계정' };
-const REQ_TYPES  = { SKM:['쿠폰재발송','오류문의'], 이모션:['이벤트 응모내역 확인','마케팅동의 제외'], PSM:['일반문의','기타요청'] };
-const RECV_EMAILS= { SKM:['meehyun@mnservice.co.kr','irene@mnservice.co.kr','ina@mnservice.co.kr'], 이모션:['jieun.lee@emotion.co.kr','eunyoung.sa@emotion.co.kr','ain.lee@emotion.co.kr','TDS@emotion.co.kr'], PSM:['2009607@skpsnm.com'] };
-const ROLE_MAP   = { ACE:'requester', TOP:'requester', SKM:'receiver', '이모션':'receiver', PSM:'manager', PSNM:'psm_receiver' };
-const CO_MAP     = { ACE:'ACE', TOP:'TOP', SKM:'SK M&Service', PSM:'PS&M', '이모션':'이모션', PSNM:'PS&M' };
+
+// 수신사별 요청 종류
+const REQ_TYPES = {
+  SKM  : ['쿠폰재발송', '오류문의'],
+  이모션: ['이벤트 응모내역 확인', '마케팅동의 제외'],
+  PSM  : ['일반문의', '기타요청'],
+};
+
+// 수신사별 알림 메일 수신 이메일 목록
+const RECV_EMAILS = {
+  SKM  : ['meehyun@mnservice.co.kr','irene@mnservice.co.kr','ina@mnservice.co.kr'],
+  이모션: ['jieun.lee@emotion.co.kr','eunyoung.sa@emotion.co.kr','ain.lee@emotion.co.kr','TDS@emotion.co.kr'],
+  PSM  : ['2009607@skpsnm.com'],   // PS&M 수신 → 관리자 메일
+};
+
+// company 코드 → 화면 표시명
+const CO_MAP = {
+  ACE : 'ACE',
+  TOP : 'TOP',
+  SKM : 'SK M&Service',
+  이모션: '이모션',
+  PSM : 'PS&M',
+  PSNM: 'PS&M',
+};
+
+// 역할별 접근 가능 페이지 (NAV 아래 정의)
+// role: requester | receiver | dual | manager
+// - requester : ACE, TOP → 요청 페이지만
+// - receiver  : SKM, 이모션 → 수신 페이지만 (자기 회사로 온 것만)
+// - dual      : PSNM → 요청 + PS&M 수신 둘 다
+// - manager   : PSM(2009607) → 관리자 페이지 전용
 
 /* ════════════════════════════════════════════════
    Google Apps Script 이메일 발송
@@ -485,13 +512,20 @@ async function doRegister() {
   if (pw.length < 6)  { toast('비밀번호는 6자 이상 입력해주세요','error'); return; }
   if (id === MASTER.id){ toast('이미 사용 중인 아이디입니다','error'); return; }
 
+  // company → 기본 role 매핑
+  const roleByCompany = { ACE:'requester', TOP:'requester', SKM:'receiver', '이모션':'receiver', PSNM:'dual' };
+
   load(true, '중복 확인 중...');
   try {
     const [existUser, existPend] = await Promise.all([fbGet(`users/${id}`), fbGet(`pending/${id}`)]);
     if (existUser || existPend) { load(false); toast('이미 사용 중인 아이디입니다','error'); return; }
 
     const uid  = Date.now();
-    const data = { id, pw, name, company, email, role: ROLE_MAP[company]||'requester', requestedAt: new Date().toLocaleString('ko-KR'), uid };
+    const data = {
+      id, pw, name, company, email,
+      role: roleByCompany[company] || 'requester',
+      requestedAt: new Date().toLocaleString('ko-KR'), uid
+    };
     await fbSet(`pending/${id}`, data);
     load(false);
     toast('가입 신청이 완료되었습니다!', 'success');
@@ -560,13 +594,18 @@ function doLogout() {
    앱 진입 + 실시간 구독 시작
 ══════════════════════════════════════ */
 const NAV = {
-  requester:    [{ id:'page-request',  label:'요청하기',       icon:'📤' }],
-  receiver:     [{ id:'page-receive',  label:'수신 요청 목록', icon:'📋' }],
-  manager:      [{ id:'page-manage',   label:'관리자 페이지',  icon:'⚙️' }],
-  psm_receiver: [
-    { id:'page-request',     label:'요청하기',       icon:'📤' },
-    { id:'page-psm-receive', label:'PS&M 수신 목록', icon:'📋' },
-    { id:'page-manage',      label:'전체 현황',      icon:'📊' },
+  requester: [
+    { id:'page-request', label:'요청하기', icon:'📤' },
+  ],
+  receiver: [
+    { id:'page-receive', label:'수신 요청 목록', icon:'📋' },
+  ],
+  dual: [
+    { id:'page-request',     label:'요청하기',        icon:'📤' },
+    { id:'page-psm-receive', label:'PS&M 수신 목록',  icon:'📋' },
+  ],
+  manager: [
+    { id:'page-manage', label:'관리자 페이지', icon:'⚙️' },
   ],
 };
 
@@ -576,27 +615,15 @@ function enterApp() {
   el('s-name').textContent    = CU.name;
   el('s-company').textContent = CO_MAP[CU.company] || CU.company;
 
-  // psm_receiver는 회원관리 탭 숨김
-  const memberTab = document.querySelector('.tab-btn[onclick*="t-members"]');
-  if (memberTab) memberTab.style.display = CU.role === 'psm_receiver' ? 'none' : '';
-
   const nav = el('s-nav'); nav.innerHTML = '';
-  NAV[CU.role].forEach((item, i) => {
+  (NAV[CU.role] || NAV.requester).forEach((item, i) => {
     const btn = document.createElement('button');
     btn.className = 'nav-item' + (i === 0 ? ' active' : '');
     btn.innerHTML = `<span class="nav-icon">${item.icon}</span>${item.label}`;
     btn.onclick = () => switchPage(item.id, btn);
     nav.appendChild(btn);
   });
-  switchPage(NAV[CU.role][0].id);
-
-  // psm_receiver용 페이지 타이틀 분기
-  if (CU.role === 'psm_receiver') {
-    const manageTitle = document.querySelector('#page-manage .page-title');
-    const manageDesc  = document.querySelector('#page-manage .page-desc');
-    if (manageTitle) manageTitle.textContent = '전체 현황';
-    if (manageDesc)  manageDesc.textContent  = '전체 요청 현황을 확인합니다';
-  }
+  switchPage((NAV[CU.role] || NAV.requester)[0].id);
 
   // ★ 실시간 구독: requests 변경 시 자동 갱신
   const reqUnsub = onValue(dbRef('requests'), snap => {
@@ -632,14 +659,10 @@ function switchTab(tid, btn) {
 function refreshRequests() {
   if (!CU) return;
   const reqs = window._requests || [];
-  if (CU.role === 'requester')    renderMyReqs(reqs);
-  if (CU.role === 'receiver')     renderRecv(reqs);
-  if (CU.role === 'manager')      renderManage(reqs);
-  if (CU.role === 'psm_receiver') {
-    renderMyReqs(reqs);
-    renderPsmRecv(reqs);  // PS&M으로 온 요청 수신+완료처리
-    renderManage(reqs);   // 전체 현황 (회원관리 탭 없음)
-  }
+  if (CU.role === 'requester') renderMyReqs(reqs);
+  if (CU.role === 'receiver')  renderRecv(reqs);
+  if (CU.role === 'dual')      { renderMyReqs(reqs); renderPsmRecv(reqs); }
+  if (CU.role === 'manager')   renderManage(reqs);
 }
 
 /* ══════════════════════════════════════
@@ -791,38 +814,55 @@ function renderManage(reqs) {
 }
 
 async function renderMembers() {
-  // 최신 데이터 Firebase에서 직접 조회
   load(true, '회원 정보 불러오는 중...');
   const [pData, uData] = await Promise.all([fbGet('pending'), fbGet('users')]);
   load(false);
   const pending = o2arr(pData);
   const users   = o2arr(uData);
 
+  const ROLE_LABEL = { requester:'요청자', receiver:'수신자', dual:'요청+수신(PSNM)', manager:'관리자' };
+  const ROLE_OPTIONS = `
+    <option value="requester">요청자 (ACE/TOP)</option>
+    <option value="receiver">수신자 (SKM/이모션)</option>
+    <option value="dual">요청+수신 (PSNM)</option>`;
+
   const pList = el('pend-list');
   if (!pending.length) { pList.innerHTML = empty('✅','대기 중인 신청이 없습니다'); }
   else pList.innerHTML=`<div class="tbl-wrap"><table class="req-table"><thead><tr>
-    <th>신청일시</th><th>업체</th><th>담당자명</th><th>아이디</th><th>이메일</th><th>처리</th>
+    <th>신청일시</th><th>업체</th><th>담당자명</th><th>아이디</th><th>이메일</th><th>권한 설정</th><th>처리</th>
   </tr></thead><tbody>${pending.map(u=>`<tr>
     <td style="font-size:12px;color:var(--gray-500);white-space:nowrap">${u.requestedAt}</td>
-    <td>${badge('badge-yellow',u.company)}</td>
+    <td>${badge('badge-yellow', CO_MAP[u.company]||u.company)}</td>
     <td style="font-weight:700">${u.name}</td>
     <td><code style="font-size:13px">${u.id}</code></td>
     <td style="font-size:13px">${u.email}</td>
+    <td>
+      <select id="role-sel-${u.id}" style="padding:5px 8px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;background:white">
+        ${ROLE_OPTIONS}
+      </select>
+    </td>
     <td style="white-space:nowrap">
       <button class="btn-sm btn-approve" onclick="window._approve('${u.id}')" style="margin-right:4px">✅ 승인</button>
       <button class="btn-sm btn-reject"  onclick="window._openReject('${u.id}')">❌ 거절</button>
     </td>
   </tr>`).join('')}</tbody></table></div>`;
 
+  // 기본값 세팅
+  pending.forEach(u => {
+    const sel = document.getElementById(`role-sel-${u.id}`);
+    if (sel && u.role) sel.value = u.role;
+  });
+
   const all   = [{ ...MASTER }, ...users];
   const aList = el('approved-list');
   aList.innerHTML=`<div class="tbl-wrap"><table class="req-table"><thead><tr>
-    <th>업체</th><th>담당자명</th><th>아이디</th><th>이메일</th><th>승인일시</th><th>관리</th>
+    <th>업체</th><th>담당자명</th><th>아이디</th><th>이메일</th><th>권한</th><th>승인일시</th><th>관리</th>
   </tr></thead><tbody>${all.map(u=>`<tr>
-    <td>${badge(u.isMaster?'badge-blue':'badge-green', u.company)}</td>
+    <td>${badge(u.isMaster?'badge-blue':'badge-green', CO_MAP[u.company]||u.company)}</td>
     <td style="font-weight:700">${u.name}${u.isMaster?' <span class="badge badge-blue" style="font-size:10px">마스터</span>':''}</td>
     <td><code style="font-size:13px">${u.id}</code></td>
     <td style="font-size:13px">${u.email||'-'}</td>
+    <td>${u.isMaster ? badge('badge-blue','관리자') : badge('badge-gray', ROLE_LABEL[u.role]||u.role||'-')}</td>
     <td style="font-size:12px;color:var(--gray-500)">${u.approvedAt||'-'}</td>
     <td>${u.isMaster?'<span style="font-size:12px;color:var(--gray-400)">삭제 불가</span>'
       :`<button class="btn-sm btn-del" onclick="window._delUser('${u.id}')">삭제</button>`}</td>
@@ -866,13 +906,16 @@ async function approveUser(id) {
   load(true,'승인 처리 중...');
   const data = await fbGet(`pending/${id}`);
   if (!data) { load(false); return; }
-  const approved = { ...data, approvedAt: new Date().toLocaleString('ko-KR') };
+  // 관리자 페이지에서 선택한 역할을 반영 (없으면 신청 시 자동 부여된 role 사용)
+  const sel = document.getElementById(`role-sel-${id}`);
+  const role = sel ? sel.value : (data.role || 'requester');
+  const approved = { ...data, role, approvedAt: new Date().toLocaleString('ko-KR') };
   await Promise.all([
-    fbSet(`users/${id}`, approved),   // users에 추가
-    fbDel(`pending/${id}`)            // pending에서 제거
+    fbSet(`users/${id}`, approved),
+    fbDel(`pending/${id}`)
   ]);
   load(false);
-  toast(`✅ ${data.name} (${data.company}) 승인 완료!`,'success');
+  toast(`✅ ${data.name} (${CO_MAP[data.company]||data.company}) 승인 완료! 권한: ${role}`,'success');
   renderMembers();
 }
 
