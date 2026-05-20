@@ -345,6 +345,83 @@ const RECV_EMAILS= { SKM:['meehyun@mnservice.co.kr','irene@mnservice.co.kr','ina
 const ROLE_MAP   = { ACE:'requester', TOP:'requester', SKM:'receiver', '이모션':'receiver', PSM:'manager' };
 const CO_MAP     = { ACE:'ACE', TOP:'TOP', SKM:'SK M&Service', PSM:'PS&M', '이모션':'이모션' };
 
+/* ════════════════════════════════════════════════
+   Google Apps Script 이메일 발송
+   ▶ 아래 GAS_URL을 배포 후 받은 웹 앱 URL로 교체하세요
+════════════════════════════════════════════════ */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwaj4N_JVPZK1Wexuxm9tfY_aDCWeSDunzdMAgXsiOTYyq_SeR16yeCEBfTl604n5hQ/exec';  // ← 여기에 웹 앱 URL 붙여넣기
+
+/**
+ * GAS로 이메일 1건 발송 (실패해도 요청 흐름 계속 진행)
+ */
+async function gasSendEmail({ to, subject, body }) {
+  if (GAS_URL === 'YOUR_GAS_WEB_APP_URL') {
+    console.warn('[GAS] GAS_URL이 설정되지 않아 메일 발송을 건너뜁니다.');
+    return;
+  }
+  try {
+    await fetch(GAS_URL, {
+      method : 'POST',
+      mode   : 'no-cors',   // GAS는 CORS 헤더를 반환하지 않으므로 no-cors 필수
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({ to, subject, body }),
+    });
+  } catch (e) {
+    console.error('[GAS] 메일 발송 오류:', e);
+  }
+}
+
+/**
+ * ① 요청 접수 시 → 수신사(SK M&Service / 이모션) 담당자들에게 알림
+ */
+async function sendRequestNotification(req) {
+  const receiverName = CO_MAP[req.receiver] || req.receiver;
+  const emails = RECV_EMAILS[req.receiver] || [];
+  const subject = `[PartnerDesk] ${req.senderCompany}에서 새 요청이 접수되었습니다`;
+  const body =
+`${receiverName} 담당자님, 안녕하세요.
+
+${req.senderCompany} ${req.sender} 담당자로부터 새 요청이 접수되었습니다.
+
+■ 요청 종류  : ${req.type}
+■ 요청 내용  : ${req.detail}
+■ 고객 정보  : ${req.customer || '없음'}
+■ 요청 일시  : ${req.createdAt}
+■ 발신자 이메일 : ${req.senderEmail}
+
+PartnerDesk에 로그인하여 확인 후 처리 부탁드립니다.
+https://bagjaeharu.github.io/partnerdesk/
+
+감사합니다.
+PS&M PartnerDesk`;
+
+  await Promise.all(emails.map(to => gasSendEmail({ to, subject, body })));
+}
+
+/**
+ * ② 완료 처리 시 → 요청자(ACE / TOP) 담당자에게 알림
+ */
+async function sendCompleteNotification(req, note, completedAt) {
+  const receiverName = CO_MAP[req.receiver] || req.receiver;
+  const subject = `[PartnerDesk] 요청하신 건이 완료 처리되었습니다`;
+  const body =
+`${req.senderCompany} ${req.sender} 담당자님, 안녕하세요.
+
+요청하신 건이 처리 완료되었습니다.
+
+■ 요청 종류  : ${req.type}
+■ 원본 요청  : ${req.detail}
+■ 완료 내용  : ${note}
+■ 완료 일시  : ${completedAt}
+■ 처리 담당  : ${receiverName}
+
+감사합니다.
+PS&M PartnerDesk
+https://bagjaeharu.github.io/partnerdesk/`;
+
+  await gasSendEmail({ to: req.senderEmail, subject, body });
+}
+
 /* ── 상태 ── */
 let CU = null;          // 현재 로그인 유저
 let completeId = null;
@@ -552,6 +629,11 @@ async function submitRequest() {
   };
   load(true, '요청 전송 중...');
   await fbSet(`requests/${id}`, req);   // id를 key로 저장 → 누적 적재
+
+  // ★ 수신사 담당자들에게 요청 접수 알림 메일 발송
+  load(true, '알림 메일 발송 중...');
+  await sendRequestNotification(req);
+
   load(false);
 
   el('req-receiver').value = '';
@@ -703,9 +785,14 @@ async function confirmComplete() {
   const updated = { ...req, status:'완료', note, completedAt: new Date().toLocaleString('ko-KR') };
   load(true,'완료 처리 중...');
   await fbSet(`requests/${completeId}`, updated);
+
+  // ★ 요청자에게 처리 완료 알림 메일 발송
+  load(true,'완료 알림 메일 발송 중...');
+  await sendCompleteNotification(req, note, updated.completedAt);
+
   load(false);
   closePop('pop-complete'); completeId = null;
-  toast('✅ 완료 처리되었습니다!','success');
+  toast('✅ 완료 처리 및 알림 메일이 발송되었습니다!','success');
 }
 
 /* ══════════════════════════════════════
