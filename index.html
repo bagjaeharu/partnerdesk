@@ -862,11 +862,25 @@ async function renderMembers() {
     <td style="font-weight:700">${u.name}${u.isMaster?' <span class="badge badge-blue" style="font-size:10px">마스터</span>':''}</td>
     <td><code style="font-size:13px">${u.id}</code></td>
     <td style="font-size:13px">${u.email||'-'}</td>
-    <td>${u.isMaster ? badge('badge-blue','관리자') : badge('badge-gray', ROLE_LABEL[u.role]||u.role||'-')}</td>
+    <td>${u.isMaster
+      ? badge('badge-blue','관리자')
+      : `<div style="display:flex;align-items:center;gap:6px">
+           <select id="urole-${u.id}" style="padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;background:white">
+             ${ROLE_OPTIONS}
+           </select>
+           <button class="btn-sm btn-approve" style="white-space:nowrap;padding:4px 10px" onclick="window._changeRole('${u.id}')">저장</button>
+         </div>`
+    }</td>
     <td style="font-size:12px;color:var(--gray-500)">${u.approvedAt||'-'}</td>
     <td>${u.isMaster?'<span style="font-size:12px;color:var(--gray-400)">삭제 불가</span>'
       :`<button class="btn-sm btn-del" onclick="window._delUser('${u.id}')">삭제</button>`}</td>
   </tr>`).join('')}</tbody></table></div>`;
+
+  // 승인된 회원 권한 셀렉트 기본값 세팅
+  users.forEach(u => {
+    const sel = document.getElementById(`urole-${u.id}`);
+    if (sel && u.role) sel.value = u.role;
+  });
 }
 
 function updateBadge() {
@@ -906,8 +920,7 @@ async function approveUser(id) {
   load(true,'승인 처리 중...');
   const data = await fbGet(`pending/${id}`);
   if (!data) { load(false); return; }
-  // 관리자 페이지에서 선택한 역할을 반영 (없으면 신청 시 자동 부여된 role 사용)
-  const sel = document.getElementById(`role-sel-${id}`);
+  const sel  = document.getElementById(`role-sel-${id}`);
   const role = sel ? sel.value : (data.role || 'requester');
   const approved = { ...data, role, approvedAt: new Date().toLocaleString('ko-KR') };
   await Promise.all([
@@ -916,6 +929,21 @@ async function approveUser(id) {
   ]);
   load(false);
   toast(`✅ ${data.name} (${CO_MAP[data.company]||data.company}) 승인 완료! 권한: ${role}`,'success');
+  renderMembers();
+}
+
+/* 승인된 회원 권한 변경 */
+async function changeRole(id) {
+  const sel = document.getElementById(`urole-${id}`);
+  if (!sel) return;
+  const newRole = sel.value;
+  load(true, '권한 변경 중...');
+  const data = await fbGet(`users/${id}`);
+  if (!data) { load(false); toast('회원 정보를 찾을 수 없습니다','error'); return; }
+  await fbSet(`users/${id}`, { ...data, role: newRole });
+  load(false);
+  const ROLE_LABEL = { requester:'요청자', receiver:'수신자', dual:'요청+수신(PSNM)', manager:'관리자' };
+  toast(`✅ ${data.name} 권한이 "${ROLE_LABEL[newRole]||newRole}"으로 변경되었습니다`, 'success');
   renderMembers();
 }
 
@@ -1030,6 +1058,7 @@ window.confirmReject  = confirmReject;
 window._openComplete  = openComplete;
 window._openReject    = openReject;
 window._approve       = approveUser;
+window._changeRole    = changeRole;
 window._delUser       = deleteUser;
 window._delReq        = deleteRequest;
 window._delSelected   = deleteSelected;
