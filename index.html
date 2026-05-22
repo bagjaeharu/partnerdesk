@@ -564,17 +564,20 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbwaj4N_JVPZK1Wexuxm9tfY
  * GAS로 이메일 1건 발송 (실패해도 요청 흐름 계속 진행)
  */
 async function gasSendEmail({ to, subject, body }) {
-  if (GAS_URL === 'YOUR_GAS_WEB_APP_URL') {
-    console.warn('[GAS] GAS_URL이 설정되지 않아 메일 발송을 건너뜁니다.');
+  if (!GAS_URL || GAS_URL === 'YOUR_GAS_WEB_APP_URL') {
+    console.warn('[GAS] GAS_URL이 설정되지 않았습니다.');
     return;
   }
   try {
-    await fetch(GAS_URL, {
+    const res = await fetch(GAS_URL, {
       method : 'POST',
-      mode   : 'no-cors',   // GAS는 CORS 헤더를 반환하지 않으므로 no-cors 필수
       headers: { 'Content-Type': 'application/json' },
       body   : JSON.stringify({ to, subject, body }),
     });
+    const json = await res.json();
+    if (json.status !== 'ok') {
+      console.error('[GAS] 발송 실패:', json.msg);
+    }
   } catch (e) {
     console.error('[GAS] 메일 발송 오류:', e);
   }
