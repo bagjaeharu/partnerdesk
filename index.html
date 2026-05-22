@@ -134,17 +134,6 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-txt{font-size:14px;color:var(--gray-500);font-weight:700}
 @media(max-width:768px){.sidebar{display:none}.main-content{padding:20px}.stat-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}}
-
-/* dual role 전용 탭 GNB */
-.dual-tab-bar{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--gray-200);background:white;border-radius:var(--radius) var(--radius) 0 0;padding:0 4px}
-.dual-tab-btn{display:flex;align-items:center;gap:8px;padding:13px 24px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:var(--font);font-size:14px;font-weight:700;color:var(--gray-500);cursor:pointer;transition:all .2s;white-space:nowrap}
-.dual-tab-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
-.dual-tab-btn:hover{color:var(--gray-800);background:var(--gray-50)}
-.dual-tab-icon{font-size:18px}
-@media(max-width:768px){
-  .dual-tab-btn{padding:12px 18px;font-size:13px}
-  .dual-tab-icon{font-size:16px}
-}
 </style>
 </head>
 <body>
@@ -177,13 +166,22 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
         <label>업체 구분</label>
         <select id="reg-company">
           <option value="">업체를 선택하세요</option>
+          <optgroup label="── 요청 업체">
           <option value="ACE">ACE</option>
           <option value="TOP">TOP</option>
           <option value="그린피플_상담">그린피플_상담</option>
           <option value="그린피플_채팅">그린피플_채팅</option>
+          </optgroup>
+          <optgroup label="── 수신 업체">
           <option value="SKM">SK M&amp;Service</option>
           <option value="이모션">이모션</option>
+          <option value="그린피플_개통">그린피플(개통)</option>
+          <option value="그린피플_물류">그린피플(물류)</option>
+          <option value="CJ대한통운">CJ대한통운</option>
+          </optgroup>
+          <optgroup label="── PS&amp;M">
           <option value="PSNM">PS&amp;M</option>
+          </optgroup>
         </select>
       </div>
       <div class="field"><label>담당자명</label><input type="text" id="reg-name" placeholder="이름 입력" /></div>
@@ -223,7 +221,7 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
     </div>
   </div>
   <div class="main-content">
-    <!-- 요청 페이지 -->
+    <!-- 요청 페이지 (requester role 전용) -->
     <div id="page-request" class="page">
       <div class="page-header"><div class="page-title">요청하기</div><div class="page-desc">쿠폰재발송 또는 문의를 요청합니다</div></div>
       <div class="card">
@@ -259,7 +257,7 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
       </div>
       <div class="card"><div class="card-title">내 요청 내역</div><div id="my-req-list"></div></div>
     </div>
-    <!-- 수신 페이지 (SKM / 이모션용) -->
+    <!-- 수신 페이지 (SKM / 이모션 등 receiver role 전용) -->
     <div id="page-receive" class="page">
       <div class="page-header"><div class="page-title">수신 요청 목록</div><div class="page-desc">접수된 요청을 확인하고 처리합니다</div></div>
       <div class="stat-grid">
@@ -269,31 +267,21 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
       </div>
       <div class="card"><div class="card-title">요청 목록</div><div id="recv-list"></div></div>
     </div>
-    <!-- dual role 전용 통합 페이지 (요청하기 + PS&M 수신 탭) -->
+    <!-- dual role 전용 통합 페이지: 탭으로 요청하기 / PS&M 수신 전환 -->
     <div id="page-dual" class="page">
-      <div class="page-header">
-        <div class="page-title" id="dual-page-title">요청하기</div>
-        <div class="page-desc" id="dual-page-desc">쿠폰재발송 또는 문의를 요청합니다</div>
+      <div class="page-header"><div class="page-title">요청하기</div><div class="page-desc">쿠폰재발송 또는 문의를 요청합니다</div></div>
+      <div class="tab-bar">
+        <button class="tab-btn active" id="dual-tab-req" onclick="switchDualTab('dt-request', this)">📤 요청하기</button>
+        <button class="tab-btn" id="dual-tab-recv" onclick="switchDualTab('dt-receive', this)">📋 PS&amp;M 수신 목록 <span class="t-badge" id="dual-recv-badge"></span></button>
       </div>
-      <!-- 탭 GNB (관리자 페이지와 동일한 스타일) -->
-      <div class="dual-tab-bar">
-        <button class="dual-tab-btn active" id="dual-btn-request" onclick="switchDualTab('dual-request', this)">
-          <span class="dual-tab-icon">📤</span>요청하기
-        </button>
-        <button class="dual-tab-btn" id="dual-btn-receive" onclick="switchDualTab('dual-receive', this)">
-          <span class="dual-tab-icon">📋</span>PS&amp;M 수신 목록
-          <span class="t-badge" id="dual-recv-badge" style="margin-left:6px">0</span>
-        </button>
-      </div>
-
       <!-- 탭 패널: 요청하기 -->
-      <div id="dual-request" class="tab-panel active">
+      <div id="dt-request" class="tab-panel active">
         <div class="card">
           <div class="card-title">새 요청 작성</div>
           <div class="form-grid" style="margin-bottom:12px">
             <div class="req-field">
               <label>수신사 선택</label>
-              <select id="dual-req-receiver" onchange="dualUpdateTypes()">
+              <select id="dual-receiver" onchange="dualUpdateTypes()">
                 <option value="">선택하세요</option>
                 <option value="SKM">SK M&amp;Service</option>
                 <option value="이모션">이모션</option>
@@ -305,25 +293,24 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
             </div>
             <div class="req-field">
               <label>요청 종류</label>
-              <select id="dual-req-type" onchange="dualUpdateHint()"><option value="">수신사 먼저 선택</option></select>
+              <select id="dual-type" onchange="dualUpdateHint()"><option value="">수신사 먼저 선택</option></select>
             </div>
             <div class="req-field full">
               <label>요청 내용 (상세)</label>
-              <div id="dual-req-form-hint" style="display:none;background:var(--blue-light);border:1px solid #c7d9f8;border-radius:var(--radius-sm);padding:10px 13px;font-size:12px;color:var(--blue-dark);margin-bottom:8px;line-height:1.8"></div>
-              <textarea id="dual-req-detail" rows="4" placeholder="요청 내용을 상세히 입력해주세요.&#10;예) 고객명: 홍길동 / 주문번호: 12345 / 쿠폰번호: ABC-001"></textarea>
+              <div id="dual-form-hint" style="display:none;background:var(--blue-light);border:1px solid #c7d9f8;border-radius:var(--radius-sm);padding:10px 13px;font-size:12px;color:var(--blue-dark);margin-bottom:8px;line-height:1.8"></div>
+              <textarea id="dual-detail" rows="4" placeholder="요청 내용을 상세히 입력해주세요.&#10;예) 고객명: 홍길동 / 주문번호: 12345 / 쿠폰번호: ABC-001"></textarea>
             </div>
             <div class="req-field full">
               <label>고객 정보 (선택)</label>
-              <input type="text" id="dual-req-customer" placeholder="고객명, 연락처, 주문번호 등" />
+              <input type="text" id="dual-customer" placeholder="고객명, 연락처, 주문번호 등" />
             </div>
           </div>
           <button class="btn-submit" onclick="dualSubmitRequest()">요청 전송 →</button>
         </div>
         <div class="card"><div class="card-title">내 요청 내역</div><div id="dual-my-req-list"></div></div>
       </div>
-
-      <!-- 탭 패널: PS&M 수신 -->
-      <div id="dual-receive" class="tab-panel">
+      <!-- 탭 패널: PS&M 수신 목록 -->
+      <div id="dt-receive" class="tab-panel">
         <div class="stat-grid">
           <div class="stat-card"><div class="stat-label">전체 요청</div><div class="stat-value" id="psm-st-total">0</div></div>
           <div class="stat-card"><div class="stat-label">처리 중</div><div class="stat-value" id="psm-st-pend" style="color:var(--coral)">0</div></div>
@@ -332,8 +319,8 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
         <div class="card"><div class="card-title">요청 목록</div><div id="psm-recv-list"></div></div>
       </div>
     </div>
-    <!-- PS&M 수신 페이지 (PSNM 계정 전용 - 하위 호환) -->
-    <div id="page-psm-receive" class="page" style="display:none"></div>
+    <!-- PS&M 수신 페이지 더미 (하위 호환 - page-psm-receive ID 유지) -->
+    <div id="page-psm-receive" class="page" style="display:none!important"></div>
     <!-- 관리자 페이지 -->
     <div id="page-manage" class="page">
       <div class="page-header"><div class="page-title">관리자 페이지</div><div class="page-desc">전체 요청 현황 및 회원 관리 (PS&amp;M 전용)</div></div>
@@ -462,6 +449,32 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
       🕐 <strong>운영시간:</strong> 평일 09:00 ~ 18:00
     </p>
     <div class="popup-actions"><button class="btn-primary" onclick="closePop('pop-inquiry')">확인</button></div>
+  </div>
+</div>
+
+<!-- 재요청 팝업 -->
+<div class="pop-overlay" id="pop-rerequest">
+  <div class="popup" style="width:560px">
+    <div class="popup-title">🔄 재요청</div>
+    <div class="popup-sub" id="rerequest-sub">완료/반려된 요청을 재요청합니다</div>
+    <div class="field"><label>추가 요청 내용</label><textarea id="rerequest-detail" rows="4" placeholder="기존 요청에서 변경되거나 추가된 내용을 입력해주세요"></textarea></div>
+    <div class="field"><label>고객 정보 (선택)</label><input type="text" id="rerequest-customer" placeholder="고객명, 연락처, 주문번호 등" /></div>
+    <div class="popup-actions">
+      <button class="btn-primary" onclick="confirmRerequest()">재요청 전송 →</button>
+      <button class="btn-cancel" onclick="closePop('pop-rerequest')">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 요청 히스토리 팝업 -->
+<div class="pop-overlay" id="pop-history">
+  <div class="popup" style="width:620px;max-height:80vh;overflow-y:auto">
+    <div class="popup-title">📋 요청 히스토리</div>
+    <div class="popup-sub" id="history-sub"></div>
+    <div id="history-body" style="margin-top:4px"></div>
+    <div class="popup-actions" style="margin-top:16px">
+      <button class="btn-primary" onclick="closePop('pop-history')">닫기</button>
+    </div>
   </div>
 </div>
 
@@ -677,7 +690,7 @@ async function doRegister() {
   if (id === MASTER.id){ toast('이미 사용 중인 아이디입니다','error'); return; }
 
   // company → 기본 role 매핑
-  const roleByCompany = { ACE:'requester', TOP:'requester', 그린피플_상담:'requester', 그린피플_채팅:'requester', SKM:'receiver', '이모션':'receiver', '그린피플_개통':'receiver', '그린피플_물류':'receiver', CJ대한통운:'receiver', PSNM:'dual' };
+  const roleByCompany = { ACE:'requester', TOP:'requester', 그린피플_상담:'requester', 그린피플_채팅:'requester', SKM:'receiver', '이모션':'receiver', '그린피플_개통':'receiver', '그린피플_물류':'receiver', CJ대한통운:'receiver', PSNM:'dual', PSM:'manager' };
 
   load(true, '중복 확인 중...');
   try {
@@ -765,7 +778,7 @@ const NAV = {
     { id:'page-receive', label:'수신 요청 목록', icon:'📋' },
   ],
   dual: [
-    { id:'page-dual', label:'요청 / 수신', icon:'📤' },
+    { id:'page-dual', label:'요청+수신', icon:'📤' },
   ],
   manager: [
     { id:'page-manage', label:'관리자 페이지', icon:'⚙️' },
@@ -777,14 +790,6 @@ function enterApp() {
   el('screen-app').classList.add('active');
   el('s-name').textContent    = CU.name;
   el('s-company').textContent = CO_MAP[CU.company] || CU.company;
-
-  // dual role: 사이드바 숨기고 full-width 메인 콘텐츠
-  const sidebar = document.querySelector('.sidebar');
-  if (CU.role === 'dual') {
-    sidebar.style.display = 'none';
-  } else {
-    sidebar.style.display = '';
-  }
 
   const nav = el('s-nav'); nav.innerHTML = '';
   (NAV[CU.role] || NAV.requester).forEach((item, i) => {
@@ -844,38 +849,37 @@ function refreshRequests() {
 }
 
 /* ══════════════════════════════════════
-   dual role 전용 탭 + 폼 함수들
+   dual role 전용 탭 전환 & 폼 함수
 ══════════════════════════════════════ */
 function switchDualTab(tid, btn) {
   document.querySelectorAll('#page-dual .tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.dual-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#page-dual .tab-btn').forEach(b => b.classList.remove('active'));
   el(tid).classList.add('active');
   if (btn) btn.classList.add('active');
 }
 
 function dualUpdateTypes() {
-  const r = el('dual-req-receiver').value, sel = el('dual-req-type');
+  const r = el('dual-receiver').value, sel = el('dual-type');
   sel.innerHTML = '<option value="">종류 선택</option>';
   (REQ_TYPES[r]||[]).forEach(t => { const o = document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); });
-  el('dual-req-form-hint').style.display = 'none';
+  el('dual-form-hint').style.display = 'none';
 }
 
 function dualUpdateHint() {
-  const r = el('dual-req-receiver').value;
-  const t = el('dual-req-type').value;
-  const hint = el('dual-req-form-hint');
+  const r = el('dual-receiver').value;
+  const t = el('dual-type').value;
+  const hint = el('dual-form-hint');
   const key = `${r}:${t}`;
   if (REQ_HINTS[key]) { hint.textContent = REQ_HINTS[key]; hint.style.display = 'block'; }
   else hint.style.display = 'none';
 }
 
 async function dualSubmitRequest() {
-  const recv   = el('dual-req-receiver').value;
-  const type   = el('dual-req-type').value;
-  const detail = el('dual-req-detail').value.trim();
-  const cust   = el('dual-req-customer').value.trim();
+  const recv   = el('dual-receiver').value;
+  const type   = el('dual-type').value;
+  const detail = el('dual-detail').value.trim();
+  const cust   = el('dual-customer').value.trim();
   if (!recv||!type||!detail) { toast('수신사, 요청종류, 요청내용을 입력해주세요','error'); return; }
-
   const id = Date.now();
   const req = {
     id, sender: CU.name, senderCompany: CU.company, senderEmail: CU.email,
@@ -888,10 +892,10 @@ async function dualSubmitRequest() {
   load(true, '알림 메일 발송 중...');
   await sendRequestNotification(req);
   load(false);
-  el('dual-req-receiver').value = '';
-  el('dual-req-type').innerHTML = '<option>수신사 먼저 선택</option>';
-  el('dual-req-detail').value   = '';
-  el('dual-req-customer').value = '';
+  el('dual-receiver').value = '';
+  el('dual-type').innerHTML = '<option>수신사 먼저 선택</option>';
+  el('dual-detail').value   = '';
+  el('dual-customer').value = '';
   toast('✅ 요청이 전송되었습니다!','success');
 }
 
@@ -904,8 +908,8 @@ function renderDualMyReqs(reqs) {
   list.innerHTML = `<div class="tbl-wrap"><table class="req-table"><thead><tr>
     <th>요청일시</th><th>수신사</th><th>요청종류</th><th>요청내용</th><th>상태</th><th>완료내용</th><th>재알림/재요청</th><th>히스토리</th>
   </tr></thead><tbody>${mine.map(r=>{
-    const canResend = r.status==='처리중' && (now - r.id) >= 3600000;
-    const canRereq  = (r.status==='완료' || r.status==='반려');
+    const canResend  = r.status==='처리중' && (now - r.id) >= 3600000;
+    const canRereq   = (r.status==='완료' || r.status==='반려');
     const hasHistory = r.history && r.history.length > 0;
     return `<tr>
     <td style="font-size:12px;color:var(--gray-500);white-space:nowrap">${r.createdAt}</td>
@@ -928,11 +932,9 @@ function renderDualMyReqs(reqs) {
 }
 
 function updateDualBadge(reqs) {
-  const badge = el('dual-recv-badge');
-  if (!badge) return;
-  const pending = reqs.filter(r => r.receiver === 'PSM' && r.status === '처리중').length;
-  badge.textContent = pending;
-  badge.className = 't-badge' + (pending > 0 ? ' show' : '');
+  const b = el('dual-recv-badge'); if (!b) return;
+  const n = reqs.filter(r => r.receiver === 'PSM' && r.status === '처리중').length;
+  b.textContent = n; b.className = 't-badge' + (n > 0 ? ' show' : '');
 }
 
 /* ══════════════════════════════════════
@@ -998,9 +1000,11 @@ function renderMyReqs(reqs) {
   if (!mine.length) { list.innerHTML = empty('📭','아직 요청 내역이 없습니다'); return; }
   const now = Date.now();
   list.innerHTML = `<div class="tbl-wrap"><table class="req-table"><thead><tr>
-    <th>요청일시</th><th>수신사</th><th>요청종류</th><th>요청내용</th><th>상태</th><th>완료내용</th><th>재알림</th>
+    <th>요청일시</th><th>수신사</th><th>요청종류</th><th>요청내용</th><th>상태</th><th>완료내용</th><th>재알림/재요청</th><th>히스토리</th>
   </tr></thead><tbody>${mine.map(r=>{
-    const canResend = r.status==='처리중' && (now - r.id) >= 3600000;
+    const canResend  = r.status==='처리중' && (now - r.id) >= 3600000;
+    const canRereq   = (r.status==='완료' || r.status==='반려');
+    const hasHistory = r.history && r.history.length > 0;
     return `<tr>
     <td style="font-size:12px;color:var(--gray-500);white-space:nowrap">${r.createdAt}</td>
     <td>${badge('badge-blue', CO_MAP[r.receiver]||r.receiver)}</td>
@@ -1010,9 +1014,14 @@ function renderMyReqs(reqs) {
     <td style="font-size:12px;color:var(--gray-500)">${r.note||'-'}</td>
     <td>${canResend
       ? `<button class="btn-sm" style="background:var(--amber);color:white;white-space:nowrap" onclick="window._resend(${r.id})">🔔 재알림</button>`
-      : r.status==='처리중'
-        ? `<span style="font-size:11px;color:var(--gray-400)">1시간 후<br>활성화</span>`
-        : '-'}</td>
+      : canRereq
+        ? `<button class="btn-sm" style="background:var(--blue);color:white;white-space:nowrap" onclick="window._openRerequest(${r.id})">🔄 재요청</button>`
+        : r.status==='처리중'
+          ? `<span style="font-size:11px;color:var(--gray-400)">1시간 후<br>활성화</span>`
+          : '-'}</td>
+    <td>${hasHistory
+      ? `<button class="btn-sm" style="background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-300)!important;white-space:nowrap" onclick="window._openHistory(${r.id})">📋 ${r.history.length}건</button>`
+      : `<span style="font-size:11px;color:var(--gray-400)">-</span>`}</td>
   </tr>`;}).join('')}</tbody></table></div>`;
 }
 
@@ -1165,10 +1174,28 @@ async function renderMembers() {
     if (sel && u.role) sel.value = u.role;
   });
 
+  const COMPANY_OPTIONS = `
+    <optgroup label="── 요청 업체">
+      <option value="ACE">ACE</option>
+      <option value="TOP">TOP</option>
+      <option value="그린피플_상담">그린피플_상담</option>
+      <option value="그린피플_채팅">그린피플_채팅</option>
+    </optgroup>
+    <optgroup label="── 수신 업체">
+      <option value="SKM">SK M&Service</option>
+      <option value="이모션">이모션</option>
+      <option value="그린피플_개통">그린피플(개통)</option>
+      <option value="그린피플_물류">그린피플(물류)</option>
+      <option value="CJ대한통운">CJ대한통운</option>
+    </optgroup>
+    <optgroup label="── PS&M">
+      <option value="PSNM">PS&M</option>
+    </optgroup>`;
+
   const all   = [{ ...MASTER }, ...users];
   const aList = el('approved-list');
   aList.innerHTML=`<div class="tbl-wrap"><table class="req-table"><thead><tr>
-    <th>업체</th><th>담당자명</th><th>아이디</th><th>휴대폰</th><th>이메일</th><th>권한</th><th>승인일시</th><th>관리</th>
+    <th>업체</th><th>담당자명</th><th>아이디</th><th>휴대폰</th><th>이메일</th><th>업체 변경</th><th>권한 변경</th><th>비밀번호 변경</th><th>승인일시</th><th>관리</th>
   </tr></thead><tbody>${all.map(u=>`<tr>
     <td>${badge(u.isMaster?'badge-blue':'badge-green', CO_MAP[u.company]||u.company)}</td>
     <td style="font-weight:700">${u.name}${u.isMaster?' <span class="badge badge-blue" style="font-size:10px">마스터</span>':''}</td>
@@ -1176,12 +1203,28 @@ async function renderMembers() {
     <td style="font-size:13px">${u.phone||'-'}</td>
     <td style="font-size:13px">${u.email||'-'}</td>
     <td>${u.isMaster
+      ? '<span style="font-size:12px;color:var(--gray-400)">변경 불가</span>'
+      : `<div style="display:flex;align-items:center;gap:4px">
+           <select id="ucompany-${u.id}" style="padding:4px 6px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;background:white;max-width:130px">
+             ${COMPANY_OPTIONS}
+           </select>
+           <button class="btn-sm btn-approve" style="white-space:nowrap;padding:4px 8px" onclick="window._changeCompany('${u.id}')">저장</button>
+         </div>`
+    }</td>
+    <td>${u.isMaster
       ? badge('badge-blue','관리자')
-      : `<div style="display:flex;align-items:center;gap:6px">
-           <select id="urole-${u.id}" style="padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;background:white">
+      : `<div style="display:flex;align-items:center;gap:4px">
+           <select id="urole-${u.id}" style="padding:4px 6px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;background:white">
              ${ROLE_OPTIONS}
            </select>
-           <button class="btn-sm btn-approve" style="white-space:nowrap;padding:4px 10px" onclick="window._changeRole('${u.id}')">저장</button>
+           <button class="btn-sm btn-approve" style="white-space:nowrap;padding:4px 8px" onclick="window._changeRole('${u.id}')">저장</button>
+         </div>`
+    }</td>
+    <td>${u.isMaster
+      ? '<span style="font-size:12px;color:var(--gray-400)">변경 불가</span>'
+      : `<div style="display:flex;align-items:center;gap:4px">
+           <input type="password" id="upw-${u.id}" placeholder="새 비밀번호" style="width:100px;padding:4px 8px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:12px" />
+           <button class="btn-sm btn-approve" style="white-space:nowrap;padding:4px 8px" onclick="window._changePw('${u.id}')">변경</button>
          </div>`
     }</td>
     <td style="font-size:12px;color:var(--gray-500)">${u.approvedAt||'-'}</td>
@@ -1189,10 +1232,12 @@ async function renderMembers() {
       :`<button class="btn-sm btn-del" onclick="window._delUser('${u.id}')">삭제</button>`}</td>
   </tr>`).join('')}</tbody></table></div>`;
 
-  // 승인된 회원 권한 셀렉트 기본값 세팅
+  // 승인된 회원 권한/업체 셀렉트 기본값 세팅
   users.forEach(u => {
-    const sel = document.getElementById(`urole-${u.id}`);
-    if (sel && u.role) sel.value = u.role;
+    const rSel = document.getElementById(`urole-${u.id}`);
+    if (rSel && u.role) rSel.value = u.role;
+    const cSel = document.getElementById(`ucompany-${u.id}`);
+    if (cSel && u.company) cSel.value = u.company;
   });
 }
 
@@ -1258,6 +1303,38 @@ async function changeRole(id) {
   const ROLE_LABEL = { requester:'요청자', receiver:'수신자', dual:'요청+수신(PSNM)', manager:'마스터' };
   toast(`✅ ${data.name} 권한이 "${ROLE_LABEL[newRole]||newRole}"으로 변경되었습니다`, 'success');
   renderMembers();
+}
+
+/* 승인된 회원 업체 변경 */
+async function changeCompany(id) {
+  const sel = document.getElementById(`ucompany-${id}`);
+  if (!sel) return;
+  const newCompany = sel.value;
+  if (!newCompany) { toast('업체를 선택해주세요','error'); return; }
+  load(true, '업체 변경 중...');
+  const data = await fbGet(`users/${id}`);
+  if (!data) { load(false); toast('회원 정보를 찾을 수 없습니다','error'); return; }
+  await fbSet(`users/${id}`, { ...data, company: newCompany });
+  load(false);
+  toast(`✅ ${data.name} 업체가 "${CO_MAP[newCompany]||newCompany}"으로 변경되었습니다`, 'success');
+  renderMembers();
+}
+
+/* 승인된 회원 비밀번호 변경 */
+async function changePw(id) {
+  const inp = document.getElementById(`upw-${id}`);
+  if (!inp) return;
+  const newPw = inp.value.trim();
+  if (!newPw) { toast('새 비밀번호를 입력해주세요','error'); return; }
+  if (newPw.length < 6) { toast('비밀번호는 6자 이상이어야 합니다','error'); return; }
+  if (!confirm('비밀번호를 변경할까요?')) return;
+  load(true, '비밀번호 변경 중...');
+  const data = await fbGet(`users/${id}`);
+  if (!data) { load(false); toast('회원 정보를 찾을 수 없습니다','error'); return; }
+  await fbSet(`users/${id}`, { ...data, pw: newPw });
+  load(false);
+  inp.value = '';
+  toast(`✅ ${data.name} 비밀번호가 변경되었습니다`, 'success');
 }
 
 function openReject(id) { rejectUid = id; el('reject-reason').value=''; openPop('pop-reject'); }
@@ -1537,41 +1614,124 @@ async function delEmail(key, idx) {
   renderEmailMgr();
 }
 
+/* ══════════════════════════════════════
+   재요청 기능 (4번)
+══════════════════════════════════════ */
+let rerequestId = null;
+
+function openRerequest(rid) {
+  const req = (window._requests||[]).find(r => r.id === rid);
+  if (!req) return;
+  rerequestId = rid;
+  el('rerequest-sub').textContent = `[${CO_MAP[req.receiver]||req.receiver}] ${req.type} · 최초요청: ${req.createdAt}`;
+  el('rerequest-detail').value = '';
+  el('rerequest-customer').value = req.customer || '';
+  openPop('pop-rerequest');
+}
+
+async function confirmRerequest() {
+  const newDetail   = el('rerequest-detail').value.trim();
+  const newCustomer = el('rerequest-customer').value.trim();
+  if (!newDetail) { toast('재요청 내용을 입력해주세요','error'); return; }
+  const req = (window._requests||[]).find(r => r.id === rerequestId);
+  if (!req) return;
+  const prevEntry = {
+    seq: (req.history ? req.history.length : 0) + 1,
+    detail: req.detail, customer: req.customer||'',
+    status: req.status, note: req.note||'',
+    createdAt: req.createdAt, completedAt: req.completedAt||'',
+  };
+  const history = [...(req.history||[]), prevEntry];
+  const now = new Date().toLocaleString('ko-KR');
+  const updated = { ...req, detail:newDetail, customer:newCustomer, status:'처리중', note:'', completedAt:'', createdAt:now, history, rerequestCount:(req.rerequestCount||0)+1 };
+  load(true,'재요청 전송 중...');
+  await fbSet(`requests/${rerequestId}`, updated);
+  load(true,'재요청 알림 메일 발송 중...');
+  const emails = RECV_EMAILS[req.receiver]||[];
+  const receiverName = CO_MAP[req.receiver]||req.receiver;
+  const subject = `[PartnerDesk] 🔄 재요청 접수 - ${req.senderCompany} (${req.type})`;
+  const body = `${receiverName} 담당자님, 안녕하세요.\n\n${req.senderCompany} ${req.sender} 담당자로부터 재요청이 접수되었습니다.\n\n■ 재요청 횟수 : ${(req.rerequestCount||0)+1}회\n■ 요청 종류   : ${req.type}\n■ 재요청 내용 : ${newDetail}\n■ 고객 정보   : ${newCustomer||'없음'}\n■ 재요청 일시 : ${now}\n\nPartnerDesk에 로그인하여 확인 후 처리 부탁드립니다.\nhttps://bagjaeharu.github.io/partnerdesk/\n\n감사합니다.\nPS&M PartnerDesk`;
+  await Promise.all(emails.map(to => gasSendEmail({ to, subject, body })));
+  load(false);
+  closePop('pop-rerequest'); rerequestId = null;
+  toast('🔄 재요청이 전송되었습니다!','success');
+}
+
+/* ══════════════════════════════════════
+   히스토리 팝업 (5번)
+══════════════════════════════════════ */
+function openHistory(rid) {
+  const req = (window._requests||[]).find(r => r.id === rid);
+  if (!req) return;
+  el('history-sub').textContent = `[${CO_MAP[req.receiver]||req.receiver}] ${req.type} · ${req.senderCompany} ${req.sender}`;
+  const history = req.history || [];
+  const sColor = s => s==='완료'?'var(--green)':s==='반려'?'var(--coral)':'var(--amber)';
+  const sIcon  = s => s==='완료'?'✅':s==='반려'?'⚠️':'🕐';
+  el('history-body').innerHTML = history.map((h,i)=>`
+    <div style="border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px;margin-bottom:12px;background:var(--gray-50)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:13px;font-weight:800;color:var(--blue)">📌 ${i+1}차 요청</span>
+        <span style="font-size:12px;font-weight:700;color:${sColor(h.status)}">${sIcon(h.status)} ${h.status}</span>
+      </div>
+      <div style="font-size:13px;color:var(--gray-700);line-height:1.9">
+        <div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">요청내용</span>${h.detail}</div>
+        ${h.customer?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">고객정보</span>${h.customer}</div>`:''}
+        <div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">요청일시</span>${h.createdAt}</div>
+        ${h.note?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">${h.status==='반려'?'반려사유':'완료내용'}</span>${h.note}</div>`:''}
+        ${h.completedAt?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">처리일시</span>${h.completedAt}</div>`:''}
+      </div>
+    </div>`).join('')+`
+    <div style="border:2px solid var(--blue);border-radius:var(--radius);padding:16px;background:var(--blue-light)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:13px;font-weight:800;color:var(--blue)">🔵 ${history.length+1}차 요청 (현재)</span>
+        <span style="font-size:12px;font-weight:700;color:${sColor(req.status)}">${sIcon(req.status)} ${req.status}</span>
+      </div>
+      <div style="font-size:13px;color:var(--gray-700);line-height:1.9">
+        <div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">요청내용</span>${req.detail}</div>
+        ${req.customer?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">고객정보</span>${req.customer}</div>`:''}
+        <div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">요청일시</span>${req.createdAt}</div>
+        ${req.note?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">${req.status==='반려'?'반려사유':'완료내용'}</span>${req.note}</div>`:''}
+        ${req.completedAt?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">처리일시</span>${req.completedAt}</div>`:''}
+      </div>
+    </div>`;
+  openPop('pop-history');
+}
+
 /* ── 전역 바인딩 (HTML onclick에서 호출) ── */
-window.doLogin        = doLogin;
-window.doLogout       = doLogout;
-window.doRegister     = doRegister;
-window.showWrap       = showWrap;
-window.openPop        = openPop;
-window.closePop       = closePop;
-window.updateTypes    = updateTypes;
-window.updateHint     = updateHint;
-window.submitRequest  = submitRequest;
-window.switchTab      = switchTab;
-window.resetFilters   = resetFilters;
-window.confirmComplete= confirmComplete;
-window.confirmReject  = confirmReject;
-window.confirmReturn  = confirmReturn;
-window._openComplete  = openComplete;
-window._openReject    = openReject;
-window._openReturn    = openReturn;
-window._approve       = approveUser;
-window._changeRole    = changeRole;
-window._changeCompany = changeCompany;
-window._changePw      = changePw;
-window._delUser       = deleteUser;
-window._delReq        = deleteRequest;
-window._delSelected   = deleteSelected;
-window._toggleAll     = toggleAll;
-window.exportExcel    = exportExcel;
-window._resend        = resendNotification;
-window._saveEmailCfg  = saveEmailConfig;
-window._addEmail      = addEmail;
-window._delEmail      = delEmail;
-window._openRerequest = openRerequest;
-window.confirmRerequest = confirmRerequest;
-window._openHistory   = openHistory;
-window.switchDualTab  = switchDualTab;
+window.doLogin         = doLogin;
+window.doLogout        = doLogout;
+window.doRegister      = doRegister;
+window.showWrap        = showWrap;
+window.openPop         = openPop;
+window.closePop        = closePop;
+window.updateTypes     = updateTypes;
+window.updateHint      = updateHint;
+window.submitRequest   = submitRequest;
+window.switchTab       = switchTab;
+window.switchDualTab   = switchDualTab;
+window.resetFilters    = resetFilters;
+window.confirmComplete = confirmComplete;
+window.confirmReject   = confirmReject;
+window.confirmReturn   = confirmReturn;
+window.confirmRerequest= confirmRerequest;
+window._openComplete   = openComplete;
+window._openReject     = openReject;
+window._openReturn     = openReturn;
+window._openRerequest  = openRerequest;
+window._openHistory    = openHistory;
+window._approve        = approveUser;
+window._changeRole     = changeRole;
+window._changeCompany  = changeCompany;
+window._changePw       = changePw;
+window._delUser        = deleteUser;
+window._delReq         = deleteRequest;
+window._delSelected    = deleteSelected;
+window._toggleAll      = toggleAll;
+window.exportExcel     = exportExcel;
+window._resend         = resendNotification;
+window._saveEmailCfg   = saveEmailConfig;
+window._addEmail       = addEmail;
+window._delEmail       = delEmail;
 window.dualUpdateTypes = dualUpdateTypes;
 window.dualUpdateHint  = dualUpdateHint;
 window.dualSubmitRequest = dualSubmitRequest;
