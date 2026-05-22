@@ -558,7 +558,7 @@ const CO_MAP = {
    Google Apps Script 이메일 발송
    ▶ 아래 GAS_URL을 배포 후 받은 웹 앱 URL로 교체하세요
 ════════════════════════════════════════════════ */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwaj4N_JVPZK1Wexuxm9tfY_aDCWeSDunzdMAgXsiOTYyq_SeR16yeCEBfTl604n5hQ/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxPHb3tZXpxiYrRSyK8RBqypuo8DSG3zotMqAwnKrChxy9dRONgoI1bUJXlFp0VoEeL/exec';
 
 /**
  * GAS로 이메일 1건 발송 (실패해도 요청 흐름 계속 진행)
@@ -569,10 +569,12 @@ async function gasSendEmail({ to, subject, body }) {
     return;
   }
   try {
+    // URLSearchParams 방식: preflight 없이 GAS로 직접 전달 가능
+    const params = new URLSearchParams({ to, subject, body });
     const res = await fetch(GAS_URL, {
       method : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body   : JSON.stringify({ to, subject, body }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body   : params.toString(),
     });
     const json = await res.json();
     if (json.status !== 'ok') {
