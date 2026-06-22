@@ -340,7 +340,19 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
             <div class="card-title" style="margin-bottom:0">📈 누적 요청 현황판</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <select id="dual-dashboard-company-filter" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white">
+                <option value="">전체 업체</option>
+                <option value="ACE">ACE</option>
+                <option value="TOP">TOP</option>
+                <option value="그린피플_상담">그린피플_상담</option>
+                <option value="그린피플_채팅">그린피플_채팅</option>
+                <option value="SKM">SK M&amp;Service</option>
+                <option value="이모션">이모션</option>
+                <option value="PSM">PS&amp;M</option>
+                <option value="PSNM">PS&amp;M(뷰어)</option>
+              </select>
               <button onclick="renderDualDashboard(window._requests||[])" style="padding:7px 14px;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">🔍 조회</button>
+              <button onclick="resetDualDashboardFilter()" style="padding:7px 14px;background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">초기화</button>
             </div>
           </div>
           <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px">
@@ -1724,10 +1736,15 @@ function renderDashboard(reqs) {
   el('db-by-sender').innerHTML  = total ? barChart(top10, '--coral') : '<div style="color:var(--gray-400);font-size:13px">데이터 없음</div>';
 }
 
-/* ★ Dual Role 누적현황판 (전체 시스템 데이터 표시) */
+/* ★ Dual Role 누적현황판 (전체 시스템 데이터 표시 + 업체 필터) */
 function renderDualDashboard(reqs) {
-  // ★ 필터링 없이 전체 요청 데이터 표시
-  const filteredReqs = reqs;
+  // ★ 업체 필터 적용
+  const selectedCompany = el('dual-dashboard-company-filter')?.value || '';
+  
+  let filteredReqs = reqs;
+  if (selectedCompany) {
+    filteredReqs = reqs.filter(r => r.senderCompany === selectedCompany);
+  }
   
   const total = filteredReqs.length;
   const pend  = filteredReqs.filter(r=>r.status==='처리중').length;
@@ -1759,6 +1776,12 @@ function renderDualDashboard(reqs) {
   el('dual-db-by-type').innerHTML    = total ? barChart(byType, '--green') : '<div style="color:var(--gray-400);font-size:13px">데이터 없음</div>';
   const top10 = Object.fromEntries(Object.entries(bySender).sort((a,b)=>b[1]-a[1]).slice(0,10));
   el('dual-db-by-sender').innerHTML  = total ? barChart(top10, '--coral') : '<div style="color:var(--gray-400);font-size:13px">데이터 없음</div>';
+}
+
+// ★ Dual 누적현황판 필터 초기화
+function resetDualDashboardFilter() {
+  el('dual-dashboard-company-filter').value = '';
+  renderDualDashboard(window._requests||[]);
 }
 
 /* ══════════════════════════════════════
@@ -1937,6 +1960,7 @@ window.renderDualDashboard = renderDualDashboard;
 window.resetManageFilters = resetManageFilters;
 window.resetRecvFilter = resetRecvFilter;
 window.resetDashboardFilter = resetDashboardFilter;
+window.resetDualDashboardFilter = resetDualDashboardFilter;
 window.confirmComplete = confirmComplete;
 window.confirmReject   = confirmReject;
 window.confirmReturn   = confirmReturn;
