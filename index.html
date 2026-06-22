@@ -340,9 +340,10 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
             <div class="card-title" style="margin-bottom:0">전체 요청/처리 내역</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-              <select id="f-company" onchange="renderManage()" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white"><option value="">전체 업체</option><option value="ACE">ACE</option><option value="TOP">TOP</option><option value="그린피플_상담">그린피플_상담</option><option value="그린피플_채팅">그린피플_채팅</option><option value="SKM">SK M&amp;Service</option><option value="이모션">이모션</option><option value="PSM">PS&amp;M</option><option value="PSNM">PS&amp;M(뷰어)</option></select>
-              <select id="f-type" onchange="renderManage()" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white"><option value="">전체 종류</option><option value="쿠폰/상품권 재발급">쿠폰/상품권 재발급</option><option value="오류문의">오류문의</option><option value="비실물기프트 문의">비실물기프트 문의</option><option value="이벤트 응모내역 확인">이벤트 응모내역 확인</option><option value="마케팅동의 제외">마케팅동의 제외</option><option value="개통/적격 요청">개통/적격 요청</option><option value="당일출고요청">당일출고요청</option><option value="출고 가능여부 문의">출고 가능여부 문의</option><option value="수취거부 확인요청">수취거부 확인요청</option><option value="분실 확인요청">분실 확인요청</option><option value="일반문의">일반문의</option><option value="기타요청">기타요청</option></select>
-              <select id="f-status" onchange="renderManage()" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white"><option value="">전체 상태</option><option value="처리중">처리중</option><option value="반려">반려</option><option value="완료">완료</option></select>
+              <select id="f-company" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white"><option value="">전체 업체</option><option value="ACE">ACE</option><option value="TOP">TOP</option><option value="그린피플_상담">그린피플_상담</option><option value="그린피플_채팅">그린피플_채팅</option><option value="SKM">SK M&amp;Service</option><option value="이모션">이모션</option><option value="PSM">PS&amp;M</option><option value="PSNM">PS&amp;M(뷰어)</option></select>
+              <select id="f-type" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white"><option value="">전체 종류</option><option value="쿠폰/상품권 재발급">쿠폰/상품권 재발급</option><option value="오류문의">오류문의</option><option value="비실물기프트 문의">비실물기프트 문의</option><option value="이벤트 응모내역 확인">이벤트 응모내역 확인</option><option value="마케팅동의 제외">마케팅동의 제외</option><option value="개통/적격 요청">개통/적격 요청</option><option value="당일출고요청">당일출고요청</option><option value="출고 가능여부 문의">출고 가능여부 문의</option><option value="수취거부 확인요청">수취거부 확인요청</option><option value="분실 확인요청">분실 확인요청</option><option value="일반문의">일반문의</option><option value="기타요청">기타요청</option></select>
+              <select id="f-status" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white"><option value="">전체 상태</option><option value="처리중">처리중</option><option value="반려">반려</option><option value="완료">완료</option></select>
+              <button onclick="renderManage(window._requests||[])" style="padding:7px 14px;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">🔍 조회</button>
               <button onclick="resetFilters()" style="padding:7px 14px;background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">초기화</button>
               <button onclick="exportExcel()" style="padding:7px 14px;background:#2e7d32;color:white;border:none;border-radius:6px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">📥 엑셀 다운로드</button>
             </div>
@@ -355,8 +356,8 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
             <div class="card-title" style="margin-bottom:0">📈 누적 요청 현황판</div>
-            <div>
-              <select id="dashboard-company-filter" onchange="renderDashboard(window._requests||[])" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <select id="dashboard-company-filter" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white">
                 <option value="">전체 업체</option>
                 <option value="ACE">ACE</option>
                 <option value="TOP">TOP</option>
@@ -367,6 +368,8 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
                 <option value="PSM">PS&amp;M</option>
                 <option value="PSNM">PS&amp;M(뷰어)</option>
               </select>
+              <button onclick="renderDashboard(window._requests||[])" style="padding:7px 14px;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">🔍 조회</button>
+              <button onclick="resetDashboardFilter()" style="padding:7px 14px;background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">초기화</button>
             </div>
           </div>
           <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px">
@@ -799,6 +802,7 @@ const NAV = {
   ],
   dual: [
     { id:'page-dual', label:'요청+수신', icon:'📤' },
+    { id:'page-manage', label:'관리자 페이지', icon:'⚙️' },
   ],
   manager: [
     { id:'page-manage', label:'관리자 페이지', icon:'⚙️' },
@@ -1557,6 +1561,11 @@ PS&M PartnerDesk`;
 /* ══════════════════════════════════════
    8. 누적 요청 현황판 대시보드 (업체 필터링 지원)
 ══════════════════════════════════════ */
+function resetDashboardFilter() {
+  el('dashboard-company-filter').value = '';
+  renderDashboard(window._requests||[]);
+}
+
 function renderDashboard(reqs) {
   // ★ 업체 필터 적용
   const selectedCompany = el('dashboard-company-filter')?.value || '';
@@ -1767,6 +1776,7 @@ window.submitRequest   = submitRequest;
 window.switchTab       = switchTab;
 window.switchDualTab   = switchDualTab;
 window.resetFilters    = resetFilters;
+window.resetDashboardFilter = resetDashboardFilter;
 window.confirmComplete = confirmComplete;
 window.confirmReject   = confirmReject;
 window.confirmReturn   = confirmReturn;
