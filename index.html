@@ -246,11 +246,11 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
           <div class="req-field full">
             <label>요청 내용 (상세)</label>
             <div id="req-form-hint" style="display:none;background:var(--blue-light);border:1px solid #c7d9f8;border-radius:var(--radius-sm);padding:10px 13px;font-size:12px;color:var(--blue-dark);margin-bottom:8px;line-height:1.8"></div>
-            <textarea id="req-detail" rows="4" placeholder="요청 내용을 상세히 입력해주세요.&#10;예) 주문번호: 12345 / 쿠폰번호: ABC-001&#10;※ 고객명, 휴대폰, 이메일 등 개인정보는 입력하지 마세요"></textarea>
+            <textarea id="req-detail" rows="4" placeholder="요청 내용을 상세히 기입해주세요.&#10;*고객정보는 기입불가능"></textarea>
           </div>
           <div class="req-field full">
             <label>주문번호 (필수)</label>
-            <input type="text" id="req-customer" placeholder="주문번호만 입력하세요 (예: 12345, ORD-001)" />
+            <input type="text" id="req-customer" placeholder="주문번호를 입력하세요" />
           </div>
         </div>
         <button class="btn-submit" onclick="submitRequest()">요청 전송 →</button>
@@ -334,11 +334,11 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
             <div class="req-field full">
               <label>요청 내용 (상세)</label>
               <div id="dual-form-hint" style="display:none;background:var(--blue-light);border:1px solid #c7d9f8;border-radius:var(--radius-sm);padding:10px 13px;font-size:12px;color:var(--blue-dark);margin-bottom:8px;line-height:1.8"></div>
-              <textarea id="dual-detail" rows="4" placeholder="요청 내용을 상세히 입력해주세요.&#10;예) 고객명: 홍길동 / 주문번호: 12345 / 쿠폰번호: ABC-001&#10;※ 휴대폰 번호는 입력하지 마세요"></textarea>
+              <textarea id="dual-detail" rows="4" placeholder="요청 내용을 상세히 기입해주세요.&#10;*고객정보는 기입불가능"></textarea>
             </div>
             <div class="req-field full">
               <label>주문번호 (필수)</label>
-              <input type="text" id="dual-customer" placeholder="주문번호만 입력하세요 (예: 12345, ORD-001)" />
+              <input type="text" id="dual-customer" placeholder="주문번호를 입력하세요" />
             </div>
           </div>
           <button class="btn-submit" onclick="dualSubmitRequest()">요청 전송 →</button>
@@ -568,7 +568,7 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
     <div class="popup-title">🔄 재요청</div>
     <div class="popup-sub" id="rerequest-sub">완료/반려된 요청을 재요청합니다</div>
     <div class="field"><label>추가 요청 내용</label><textarea id="rerequest-detail" rows="4" placeholder="기존 요청에서 변경되거나 추가된 내용을 입력해주세요"></textarea></div>
-    <div class="field"><label>주문번호 (필수)</label><input type="text" id="rerequest-customer" placeholder="주문번호만 입력하세요 (예: 12345, ORD-001)" /></div>
+    <div class="field"><label>주문번호 (필수)</label><input type="text" id="rerequest-customer" placeholder="주문번호를 입력하세요" /></div>
     <div class="popup-actions">
       <button class="btn-primary" onclick="confirmRerequest()">재요청 전송 →</button>
       <button class="btn-cancel" onclick="closePop('pop-rerequest')">취소</button>
