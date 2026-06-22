@@ -1245,9 +1245,9 @@ function renderPsmRecv(reqs) {
   if (!mine.length) { list.innerHTML = empty('✅','PS&M으로 접수된 요청이 없습니다'); return; }
   const now = Date.now();
   list.innerHTML = `<div class="tbl-wrap"><table class="req-table"><thead><tr>
-    <th>요청일시</th><th>발신업체</th><th>담당자</th><th>요청종류</th><th>요청내용</th><th>고객정보</th><th>상태</th><th>처리</th>
+    <th>요청일시</th><th>발신업체</th><th>담당자</th><th>요청종류</th><th>요청내용</th><th>고객정보</th><th>상태</th><th>처리</th><th>히스토리</th>
   </tr></thead><tbody>${mine.map(r=>{
-    const canResend = r.status==='처리중' && (now - r.id) >= 3600000;
+    const hasHistory = r.history && r.history.length > 0;
     return `<tr>
     <td style="font-size:12px;color:var(--gray-500);white-space:nowrap">${r.createdAt}</td>
     <td>${badge('badge-coral', r.senderCompany)}</td>
@@ -1260,11 +1260,13 @@ function renderPsmRecv(reqs) {
       ? `<div style="display:flex;gap:4px;flex-wrap:wrap">
            <button class="btn-sm btn-complete" onclick="window._openComplete(${r.id})">완료처리</button>
            <button class="btn-sm btn-reject" onclick="window._openReturn(${r.id})">반려</button>
-           ${canResend?`<button class="btn-sm" style="background:var(--amber);color:white" onclick="window._resend(${r.id})">🔔 재알림</button>`:''}
          </div>`
       : r.status==='반려'
         ? `<span class="badge badge-coral">반려됨</span>`
         : `<span style="font-size:12px;color:var(--gray-500)">${r.note||''}</span>`}</td>
+    <td>${hasHistory
+      ? `<button class="btn-sm" style="background:var(--green-light);color:var(--green);border:1.5px solid var(--green)!important;white-space:nowrap;font-weight:700" onclick="window._openHistory(${r.id})">📋 ${r.history.length}건</button>`
+      : `<span style="font-size:11px;color:var(--gray-400)">-</span>`}</td>
   </tr>`;}).join('')}</tbody></table></div>`;
 }
 
