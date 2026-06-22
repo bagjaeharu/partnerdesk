@@ -1201,7 +1201,7 @@ function renderRecv(reqs) {
   if (!filtered.length) { list.innerHTML = empty('✅', mine.length ? '조건에 맞는 요청이 없습니다' : '현재 받은 요청이 없습니다'); return; }
   const now = Date.now();
   list.innerHTML = `<div class="tbl-wrap"><table class="req-table"><thead><tr>
-    <th>요청일시</th><th>업체명</th><th>담당자</th><th>요청종류</th><th>요청내용</th><th>상태</th><th>처리</th><th>히스토리</th>
+    <th>요청일시</th><th>업체명</th><th>담당자</th><th>요청종류</th><th>요청내용</th><th>고객정보</th><th>상태</th><th>처리</th><th>히스토리</th>
   </tr></thead><tbody>${filtered.map(r=>{
     const canResend = r.status==='처리중' && (now - r.id) >= 3600000;
     const hasHistory = r.history && r.history.length > 0;
@@ -1211,6 +1211,7 @@ function renderRecv(reqs) {
     <td style="font-size:13px">${r.sender}</td>
     <td style="white-space:nowrap">${r.type}</td>
     <td style="max-width:180px;font-size:13px">${r.detail}</td>
+    <td style="font-size:12px;color:var(--gray-500)">${r.customer||'-'}</td>
     <td>${statusBadge(r.status)}</td>
     <td>${r.status==='처리중'
       ? `<div style="display:flex;gap:4px;flex-wrap:wrap">
@@ -1919,12 +1920,14 @@ async function confirmRerequest() {
   let newCustomer = el('rerequest-customer').value.trim();
   if (!newDetail) { toast('재요청 내용을 입력해주세요','error'); return; }
   
-  // ★ 휴대폰번호 마스킹 (010으로 시작하는 11자리 숫자 → 010***5678)
+  // ★ 휴대폰번호 마스킹 (모든 형식 처리: 01012345678, 010-1234-5678, 010 1234 5678 등)
   const maskPhoneNumber = (str) => {
     if (!str) return str;
-    // 010-1234-5678 또는 01012345678 형식 모두 처리
-    return str.replace(/(01[0-9])\d{4}(\d{4})/g, '$1***$2')
-              .replace(/(01[0-9])-?\d{4}-?(\d{4})/g, '$1***$2');
+    // Step 1: 01[0-9]로 시작하는 전화번호 찾기 (공백, 대시, 숫자 조합)
+    return str.replace(/(01[0-9])[\s\-]?(\d{3,4})[\s\-]?(\d{4})/g, (match, prefix, middle, last) => {
+      // prefix=010, middle=1234(또는 123), last=5678
+      return prefix + '***' + last;
+    });
   };
   newDetail = maskPhoneNumber(newDetail);
   newCustomer = maskPhoneNumber(newCustomer);
