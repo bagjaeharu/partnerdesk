@@ -245,7 +245,6 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
           </div>
           <div class="req-field full">
             <label>요청 내용 (상세)</label>
-            <div id="req-form-hint" style="display:none;background:var(--blue-light);border:1px solid #c7d9f8;border-radius:var(--radius-sm);padding:10px 13px;font-size:12px;color:var(--blue-dark);margin-bottom:8px;line-height:1.8"></div>
             <textarea id="req-detail" rows="4" placeholder="요청 내용을 상세히 기입해주세요.&#10;*고객정보는 기입불가능"></textarea>
           </div>
           <div class="req-field full">
@@ -329,11 +328,10 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
             </div>
             <div class="req-field">
               <label>요청 종류</label>
-              <select id="dual-type" onchange="dualUpdateHint()"><option value="">수신사 먼저 선택</option></select>
+              <select id="dual-type"><option value="">수신사 먼저 선택</option></select>
             </div>
             <div class="req-field full">
               <label>요청 내용 (상세)</label>
-              <div id="dual-form-hint" style="display:none;background:var(--blue-light);border:1px solid #c7d9f8;border-radius:var(--radius-sm);padding:10px 13px;font-size:12px;color:var(--blue-dark);margin-bottom:8px;line-height:1.8"></div>
               <textarea id="dual-detail" rows="4" placeholder="요청 내용을 상세히 기입해주세요.&#10;*고객정보는 기입불가능"></textarea>
             </div>
             <div class="req-field full">
@@ -989,16 +987,6 @@ function dualUpdateTypes() {
   const r = el('dual-receiver').value, sel = el('dual-type');
   sel.innerHTML = '<option value="">종류 선택</option>';
   (REQ_TYPES[r]||[]).forEach(t => { const o = document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); });
-  el('dual-form-hint').style.display = 'none';
-}
-
-function dualUpdateHint() {
-  const r = el('dual-receiver').value;
-  const t = el('dual-type').value;
-  const hint = el('dual-form-hint');
-  const key = `${r}:${t}`;
-  if (REQ_HINTS[key]) { hint.textContent = REQ_HINTS[key]; hint.style.display = 'block'; }
-  else hint.style.display = 'none';
 }
 
 async function dualSubmitRequest() {
@@ -1088,20 +1076,6 @@ function updateTypes() {
   const r = el('req-receiver').value, sel = el('req-type');
   sel.innerHTML = '<option value="">종류 선택</option>';
   (REQ_TYPES[r]||[]).forEach(t => { const o = document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); });
-  el('req-form-hint').style.display = 'none';
-}
-
-function updateHint() {
-  const r = el('req-receiver').value;
-  const t = el('req-type').value;
-  const hint = el('req-form-hint');
-  const key = `${r}:${t}`;
-  if (REQ_HINTS[key]) {
-    hint.textContent = REQ_HINTS[key];
-    hint.style.display = 'block';
-  } else {
-    hint.style.display = 'none';
-  }
 }
 
 async function submitRequest() {
@@ -2016,7 +1990,6 @@ window.showWrap        = showWrap;
 window.openPop         = openPop;
 window.closePop        = closePop;
 window.updateTypes     = updateTypes;
-window.updateHint      = updateHint;
 window.submitRequest   = submitRequest;
 window.switchTab       = switchTab;
 window.switchDualTab   = switchDualTab;
@@ -2051,7 +2024,6 @@ window._saveEmailCfg   = saveEmailConfig;
 window._addEmail       = addEmail;
 window._delEmail       = delEmail;
 window.dualUpdateTypes = dualUpdateTypes;
-window.dualUpdateHint  = dualUpdateHint;
 window.dualSubmitRequest = dualSubmitRequest;
 </script>
 </body>
