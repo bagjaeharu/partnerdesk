@@ -1183,7 +1183,15 @@ function renderPsmRecv(reqs) {
 function renderManage(reqs) {
   if (!reqs) reqs = window._requests||[];
   
-  const fSender=el('f-sender')?.value||'', fReceiver=el('f-receiver')?.value||'', fTy=el('f-type')?.value||'', fSt=el('f-status')?.value||'';
+  const fSender=el('f-sender')?.value||'';
+  const fReceiver=el('f-receiver')?.value||'';
+  const fTy=el('f-type')?.value||'';
+  const fSt=el('f-status')?.value||'';
+  
+  // ★ 디버깅: 필터 값 확인
+  console.log('필터 조회:', {fSender, fReceiver, fTy, fSt});
+  console.log('전체 데이터 수:', reqs.length);
+  
   let filtered = reqs.filter(r=>{
     if (fSender && r.senderCompany!==fSender) return false;
     if (fReceiver && r.receiver!==fReceiver) return false;
@@ -1191,6 +1199,8 @@ function renderManage(reqs) {
     if (fSt && r.status!==fSt) return false;
     return true;
   });
+  
+  console.log('필터링된 데이터 수:', filtered.length);
   
   // ★ 통계는 필터링된 데이터로 표시
   const done = filtered.filter(r=>r.status==='완료').length;
@@ -1203,10 +1213,10 @@ function renderManage(reqs) {
     if (fSender||fReceiver||fTy||fSt) {
       const filterName = [];
       if (fSender) filterName.push(`발신: ${fSender}`);
-      if (fReceiver) filterName.push(`수신: ${fReceiver}`);
+      if (fReceiver) filterName.push(`수신: ${CO_MAP[fReceiver]||fReceiver}`);
       if (fTy) filterName.push(`종류: ${fTy}`);
       if (fSt) filterName.push(`상태: ${fSt}`);
-      rEl.innerHTML = `<span style="background:var(--blue-light);padding:4px 10px;border-radius:6px;color:var(--blue-dark);font-weight:700">필터 결과: ${filtered.length}건 / 전체 ${reqs.length}건 | ${filterName.join(' | ')}</span>`;
+      rEl.innerHTML = `<span style="background:var(--blue-light);padding:4px 10px;border-radius:6px;color:var(--blue-dark);font-weight:700">✅ 필터 결과: ${filtered.length}건 / 전체 ${reqs.length}건 | ${filterName.join(' | ')}</span>`;
     } else {
       rEl.textContent = '';
     }
@@ -1628,10 +1638,16 @@ function resetDashboardFilter() {
 function renderDashboard(reqs) {
   // ★ 업체 필터 적용
   const selectedCompany = el('dashboard-company-filter')?.value || '';
+  
+  // ★ 디버깅
+  console.log('누적현황판 필터:', {selectedCompany});
+  
   let filteredReqs = reqs;
   if (selectedCompany) {
     filteredReqs = reqs.filter(r => r.senderCompany === selectedCompany);
   }
+  
+  console.log('필터링된 요청 수:', filteredReqs.length);
   
   const total = filteredReqs.length;
   const pend  = filteredReqs.filter(r=>r.status==='처리중').length;
