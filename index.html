@@ -1008,6 +1008,10 @@ async function dualSubmitRequest() {
   let cust   = el('dual-customer').value.trim();
   if (!recv||!type||!detail) { toast('수신사, 요청종류, 요청내용을 입력해주세요','error'); return; }
   
+  // ★ 주문번호 검증: 필수이고 '2'로 시작해야 함
+  if (!cust) { toast('주문번호를 입력해주세요','error'); return; }
+  if (!cust.startsWith('2')) { toast('주문번호를 확인해주세요','error'); return; }
+
   // ★ 마스킹: 요청 내용의 숫자만 * 처리 (개인정보 보호)
   // ★ 주문번호는 마스킹하지 않음 (원본 그대로 유지)
   const maskNumbers = (str) => {
@@ -1044,7 +1048,7 @@ function renderDualMyReqs(reqs) {
   if (!mine.length) { list.innerHTML = empty('📭','아직 요청 내역이 없습니다'); return; }
   const now = Date.now();
   list.innerHTML = `<div class="tbl-wrap"><table class="req-table"><thead><tr>
-    <th>요청일시</th><th>수신사</th><th>요청종류</th><th>요청내용</th><th>상태</th><th>완료내용</th><th>재알림/재요청</th><th>히스토리</th>
+    <th>요청일시</th><th>수신사</th><th>요청종류</th><th>요청내용</th><th>주문번호</th><th>상태</th><th>완료내용</th><th>재알림/재요청</th><th>히스토리</th>
   </tr></thead><tbody>${mine.map(r=>{
     const canResend  = r.status==='처리중' && (now - r.id) >= 3600000;
     const canRereq   = (r.status==='완료' || r.status==='반려');
@@ -1054,6 +1058,7 @@ function renderDualMyReqs(reqs) {
     <td>${badge('badge-blue', CO_MAP[r.receiver]||r.receiver)}</td>
     <td style="white-space:nowrap">${r.type}</td>
     <td style="max-width:200px;font-size:13px">${r.detail}</td>
+    <td style="font-size:13px;color:var(--gray-800)">${r.customer||'-'}</td>
     <td>${statusBadge(r.status)}</td>
     <td style="font-size:12px;color:var(--gray-500)">${r.note||'-'}</td>
     <td>${canResend
@@ -1106,6 +1111,10 @@ async function submitRequest() {
   let cust   = el('req-customer').value.trim();
   if (!recv||!type||!detail) { toast('수신사, 요청종류, 요청내용을 입력해주세요','error'); return; }
 
+  // ★ 주문번호 검증: 필수이고 '2'로 시작해야 함
+  if (!cust) { toast('주문번호를 입력해주세요','error'); return; }
+  if (!cust.startsWith('2')) { toast('주문번호를 확인해주세요','error'); return; }
+
   // ★ 마스킹: 요청 내용의 숫자만 * 처리 (개인정보 보호)
   // ★ 주문번호는 마스킹하지 않음 (원본 그대로 유지)
   const maskNumbers = (str) => {
@@ -1148,7 +1157,7 @@ function renderMyReqs(reqs) {
   if (!mine.length) { list.innerHTML = empty('📭','아직 요청 내역이 없습니다'); return; }
   const now = Date.now();
   list.innerHTML = `<div class="tbl-wrap"><table class="req-table"><thead><tr>
-    <th>요청일시</th><th>수신사</th><th>요청종류</th><th>요청내용</th><th>상태</th><th>완료내용</th><th>재알림/재요청</th><th>히스토리</th>
+    <th>요청일시</th><th>수신사</th><th>요청종류</th><th>요청내용</th><th>주문번호</th><th>상태</th><th>완료내용</th><th>재알림/재요청</th><th>히스토리</th>
   </tr></thead><tbody>${mine.map(r=>{
     const canResend  = r.status==='처리중' && (now - r.id) >= 3600000;
     const canRereq   = (r.status==='완료' || r.status==='반려');
@@ -1158,6 +1167,7 @@ function renderMyReqs(reqs) {
     <td>${badge('badge-blue', CO_MAP[r.receiver]||r.receiver)}</td>
     <td style="white-space:nowrap">${r.type}</td>
     <td style="max-width:200px;font-size:13px">${r.detail}</td>
+    <td style="font-size:13px;color:var(--gray-800)">${r.customer||'-'}</td>
     <td>${statusBadge(r.status)}</td>
     <td style="font-size:12px;color:var(--gray-500)">${r.note||'-'}</td>
     <td>${canResend
@@ -1920,6 +1930,10 @@ async function confirmRerequest() {
   let newCustomer = el('rerequest-customer').value.trim();
   if (!newDetail) { toast('재요청 내용을 입력해주세요','error'); return; }
   
+  // ★ 주문번호 검증: 필수이고 '2'로 시작해야 함
+  if (!newCustomer) { toast('주문번호를 입력해주세요','error'); return; }
+  if (!newCustomer.startsWith('2')) { toast('주문번호를 확인해주세요','error'); return; }
+
   // ★ 마스킹: 요청 내용의 숫자만 * 처리 (개인정보 보호)
   // ★ 주문번호는 마스킹하지 않음 (원본 그대로 유지)
   const maskNumbers = (str) => {
