@@ -246,11 +246,11 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
           <div class="req-field full">
             <label>요청 내용 (상세)</label>
             <div id="req-form-hint" style="display:none;background:var(--blue-light);border:1px solid #c7d9f8;border-radius:var(--radius-sm);padding:10px 13px;font-size:12px;color:var(--blue-dark);margin-bottom:8px;line-height:1.8"></div>
-            <textarea id="req-detail" rows="4" placeholder="요청 내용을 상세히 입력해주세요.&#10;예) 고객명: 홍길동 / 주문번호: 12345 / 쿠폰번호: ABC-001&#10;※ 휴대폰 번호는 입력하지 마세요"></textarea>
+            <textarea id="req-detail" rows="4" placeholder="요청 내용을 상세히 입력해주세요.&#10;예) 주문번호: 12345 / 쿠폰번호: ABC-001&#10;※ 고객명, 휴대폰, 이메일 등 개인정보는 입력하지 마세요"></textarea>
           </div>
           <div class="req-field full">
-            <label>고객 정보 (선택)</label>
-            <input type="text" id="req-customer" placeholder="고객명, 주문번호 등 (휴대폰 번호는 제외)" />
+            <label>주문번호 (필수)</label>
+            <input type="text" id="req-customer" placeholder="주문번호만 입력하세요 (예: 12345, ORD-001)" />
           </div>
         </div>
         <button class="btn-submit" onclick="submitRequest()">요청 전송 →</button>
@@ -337,8 +337,8 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
               <textarea id="dual-detail" rows="4" placeholder="요청 내용을 상세히 입력해주세요.&#10;예) 고객명: 홍길동 / 주문번호: 12345 / 쿠폰번호: ABC-001&#10;※ 휴대폰 번호는 입력하지 마세요"></textarea>
             </div>
             <div class="req-field full">
-              <label>고객 정보 (선택)</label>
-              <input type="text" id="dual-customer" placeholder="고객명, 주문번호 등 (휴대폰 번호는 제외)" />
+              <label>주문번호 (필수)</label>
+              <input type="text" id="dual-customer" placeholder="주문번호만 입력하세요 (예: 12345, ORD-001)" />
             </div>
           </div>
           <button class="btn-submit" onclick="dualSubmitRequest()">요청 전송 →</button>
@@ -568,7 +568,7 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
     <div class="popup-title">🔄 재요청</div>
     <div class="popup-sub" id="rerequest-sub">완료/반려된 요청을 재요청합니다</div>
     <div class="field"><label>추가 요청 내용</label><textarea id="rerequest-detail" rows="4" placeholder="기존 요청에서 변경되거나 추가된 내용을 입력해주세요"></textarea></div>
-    <div class="field"><label>고객 정보 (선택)</label><input type="text" id="rerequest-customer" placeholder="고객명, 연락처, 주문번호 등" /></div>
+    <div class="field"><label>주문번호 (필수)</label><input type="text" id="rerequest-customer" placeholder="주문번호만 입력하세요 (예: 12345, ORD-001)" /></div>
     <div class="popup-actions">
       <button class="btn-primary" onclick="confirmRerequest()">재요청 전송 →</button>
       <button class="btn-cancel" onclick="closePop('pop-rerequest')">취소</button>
@@ -1008,15 +1008,15 @@ async function dualSubmitRequest() {
   let cust   = el('dual-customer').value.trim();
   if (!recv||!type||!detail) { toast('수신사, 요청종류, 요청내용을 입력해주세요','error'); return; }
   
-  // ★ 휴대폰번호 마스킹 (010으로 시작하는 11자리 숫자 → 010***5678)
-  const maskPhoneNumber = (str) => {
+  // ★ 마스킹: 요청 내용의 숫자만 * 처리 (개인정보 보호)
+  // ★ 주문번호는 마스킹하지 않음 (원본 그대로 유지)
+  const maskNumbers = (str) => {
     if (!str) return str;
-    // 010-1234-5678 또는 01012345678 형식 모두 처리
-    return str.replace(/(01[0-9])\d{4}(\d{4})/g, '$1***$2')
-              .replace(/(01[0-9])-?\d{4}-?(\d{4})/g, '$1***$2');
+    // 2자리 이상의 연속된 숫자를 * 처리
+    return str.replace(/\d{2,}/g, '*');
   };
-  detail = maskPhoneNumber(detail);
-  cust   = maskPhoneNumber(cust);
+  detail = maskNumbers(detail);
+  // cust는 마스킹하지 않음 - 주문번호는 숫자 그대로 저장
   
   const id = Date.now();
   const req = {
@@ -1106,15 +1106,15 @@ async function submitRequest() {
   let cust   = el('req-customer').value.trim();
   if (!recv||!type||!detail) { toast('수신사, 요청종류, 요청내용을 입력해주세요','error'); return; }
 
-  // ★ 휴대폰번호 마스킹 (010으로 시작하는 11자리 숫자 → 010***5678)
-  const maskPhoneNumber = (str) => {
+  // ★ 마스킹: 요청 내용의 숫자만 * 처리 (개인정보 보호)
+  // ★ 주문번호는 마스킹하지 않음 (원본 그대로 유지)
+  const maskNumbers = (str) => {
     if (!str) return str;
-    // 010-1234-5678 또는 01012345678 형식 모두 처리
-    return str.replace(/(01[0-9])\d{4}(\d{4})/g, '$1***$2')
-              .replace(/(01[0-9])-?\d{4}-?(\d{4})/g, '$1***$2');
+    // 2자리 이상의 연속된 숫자를 * 처리
+    return str.replace(/\d{2,}/g, '*');
   };
-  detail = maskPhoneNumber(detail);
-  cust   = maskPhoneNumber(cust);
+  detail = maskNumbers(detail);
+  // cust는 마스킹하지 않음 - 주문번호는 숫자 그대로 저장
 
   const id = Date.now();
   const req = {
@@ -1201,7 +1201,7 @@ function renderRecv(reqs) {
   if (!filtered.length) { list.innerHTML = empty('✅', mine.length ? '조건에 맞는 요청이 없습니다' : '현재 받은 요청이 없습니다'); return; }
   const now = Date.now();
   list.innerHTML = `<div class="tbl-wrap"><table class="req-table"><thead><tr>
-    <th>요청일시</th><th>업체명</th><th>담당자</th><th>요청종류</th><th>요청내용</th><th>고객정보</th><th>상태</th><th>처리</th><th>히스토리</th>
+    <th>요청일시</th><th>업체명</th><th>담당자</th><th>요청종류</th><th>요청내용</th><th>주문번호</th><th>상태</th><th>처리</th><th>히스토리</th>
   </tr></thead><tbody>${filtered.map(r=>{
     const canResend = r.status==='처리중' && (now - r.id) >= 3600000;
     const hasHistory = r.history && r.history.length > 0;
@@ -1246,7 +1246,7 @@ function renderPsmRecv(reqs) {
   if (!mine.length) { list.innerHTML = empty('✅','PS&M으로 접수된 요청이 없습니다'); return; }
   const now = Date.now();
   list.innerHTML = `<div class="tbl-wrap"><table class="req-table"><thead><tr>
-    <th>요청일시</th><th>발신업체</th><th>담당자</th><th>요청종류</th><th>요청내용</th><th>고객정보</th><th>상태</th><th>처리</th><th>히스토리</th>
+    <th>요청일시</th><th>발신업체</th><th>담당자</th><th>요청종류</th><th>요청내용</th><th>주문번호</th><th>상태</th><th>처리</th><th>히스토리</th>
   </tr></thead><tbody>${mine.map(r=>{
     const hasHistory = r.history && r.history.length > 0;
     return `<tr>
@@ -1619,7 +1619,7 @@ function exportExcel() {
 
   if (!filtered.length) { toast('다운로드할 데이터가 없습니다', 'error'); return; }
 
-  const headers = ['요청번호','요청일시','발신업체','담당자','담당자이메일','수신사','요청종류','요청내용','고객정보','상태','완료내용','완료일시'];
+  const headers = ['요청번호','요청일시','발신업체','담당자','담당자이메일','수신사','요청종류','요청내용','주문번호','상태','완료내용','완료일시'];
   const rows = filtered.map(r => [
     r.id,
     r.createdAt,
@@ -1710,7 +1710,7 @@ async function resendNotification(rid) {
 
 ■ 요청 종류  : ${req.type}
 ■ 요청 내용  : ${req.detail}
-■ 고객 정보  : ${req.customer || '없음'}
+■ 주문번호  : ${req.customer || '없음'}
 ■ 요청 일시  : ${req.createdAt}
 ■ 발신자     : ${req.senderCompany} ${req.sender} (${req.senderEmail})
 
@@ -1920,17 +1920,15 @@ async function confirmRerequest() {
   let newCustomer = el('rerequest-customer').value.trim();
   if (!newDetail) { toast('재요청 내용을 입력해주세요','error'); return; }
   
-  // ★ 휴대폰번호 마스킹 (모든 형식 처리: 01012345678, 010-1234-5678, 010 1234 5678 등)
-  const maskPhoneNumber = (str) => {
+  // ★ 마스킹: 요청 내용의 숫자만 * 처리 (개인정보 보호)
+  // ★ 주문번호는 마스킹하지 않음 (원본 그대로 유지)
+  const maskNumbers = (str) => {
     if (!str) return str;
-    // Step 1: 01[0-9]로 시작하는 전화번호 찾기 (공백, 대시, 숫자 조합)
-    return str.replace(/(01[0-9])[\s\-]?(\d{3,4})[\s\-]?(\d{4})/g, (match, prefix, middle, last) => {
-      // prefix=010, middle=1234(또는 123), last=5678
-      return prefix + '***' + last;
-    });
+    // 2자리 이상의 연속된 숫자를 * 처리
+    return str.replace(/\d{2,}/g, '*');
   };
-  newDetail = maskPhoneNumber(newDetail);
-  newCustomer = maskPhoneNumber(newCustomer);
+  newDetail = maskNumbers(newDetail);
+  // newCustomer는 마스킹하지 않음 - 주문번호는 숫자 그대로 저장
   
   const req = (window._requests||[]).find(r => r.id === rerequestId);
   if (!req) return;
@@ -1949,7 +1947,7 @@ async function confirmRerequest() {
   const emails = RECV_EMAILS[req.receiver]||[];
   const receiverName = CO_MAP[req.receiver]||req.receiver;
   const subject = `[PartnerDesk] 🔄 재요청 접수 - ${req.senderCompany} (${req.type})`;
-  const body = `${receiverName} 담당자님, 안녕하세요.\n\n${req.senderCompany} ${req.sender} 담당자로부터 재요청이 접수되었습니다.\n\n■ 재요청 횟수 : ${(req.rerequestCount||0)+1}회\n■ 요청 종류   : ${req.type}\n■ 재요청 내용 : ${newDetail}\n■ 고객 정보   : ${newCustomer||'없음'}\n■ 재요청 일시 : ${now}\n\nPartnerDesk에 로그인하여 확인 후 처리 부탁드립니다.\nhttps://bagjaeharu.github.io/partnerdesk/\n\n감사합니다.\nPS&M PartnerDesk`;
+  const body = `${receiverName} 담당자님, 안녕하세요.\n\n${req.senderCompany} ${req.sender} 담당자로부터 재요청이 접수되었습니다.\n\n■ 재요청 횟수 : ${(req.rerequestCount||0)+1}회\n■ 요청 종류   : ${req.type}\n■ 재요청 내용 : ${newDetail}\n■ 주문번호   : ${newCustomer||'없음'}\n■ 재요청 일시 : ${now}\n\nPartnerDesk에 로그인하여 확인 후 처리 부탁드립니다.\nhttps://bagjaeharu.github.io/partnerdesk/\n\n감사합니다.\nPS&M PartnerDesk`;
   await Promise.all(emails.map(to => gasSendEmail({ to, subject, body })));
   load(false);
   closePop('pop-rerequest'); rerequestId = null;
@@ -1974,7 +1972,7 @@ function openHistory(rid) {
       </div>
       <div style="font-size:13px;color:var(--gray-700);line-height:1.9">
         <div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">요청내용</span>${h.detail}</div>
-        ${h.customer?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">고객정보</span>${h.customer}</div>`:''}
+        ${h.customer?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">주문번호</span>${h.customer}</div>`:''}
         <div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">요청일시</span>${h.createdAt}</div>
         ${h.note?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">${h.status==='반려'?'반려사유':'완료내용'}</span>${h.note}</div>`:''}
         ${h.completedAt?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">처리일시</span>${h.completedAt}</div>`:''}
@@ -1987,7 +1985,7 @@ function openHistory(rid) {
       </div>
       <div style="font-size:13px;color:var(--gray-700);line-height:1.9">
         <div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">요청내용</span>${req.detail}</div>
-        ${req.customer?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">고객정보</span>${req.customer}</div>`:''}
+        ${req.customer?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">주문번호</span>${req.customer}</div>`:''}
         <div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">요청일시</span>${req.createdAt}</div>
         ${req.note?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">${req.status==='반려'?'반려사유':'완료내용'}</span>${req.note}</div>`:''}
         ${req.completedAt?`<div><span style="display:inline-block;width:72px;color:var(--gray-500);font-weight:700">처리일시</span>${req.completedAt}</div>`:''}
