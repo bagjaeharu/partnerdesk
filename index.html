@@ -1216,13 +1216,12 @@ function renderRecv(reqs) {
       ? `<div style="display:flex;gap:4px;flex-wrap:wrap">
            <button class="btn-sm btn-complete" onclick="window._openComplete(${r.id})">완료처리</button>
            <button class="btn-sm btn-reject" onclick="window._openReturn(${r.id})">반려</button>
-           ${canResend?`<button class="btn-sm" style="background:var(--amber);color:white" onclick="window._resend(${r.id})">🔔 재알림</button>`:''}
          </div>`
       : r.status==='반려'
         ? `<span class="badge badge-coral">반려됨</span>`
         : `<span style="font-size:12px;color:var(--gray-500)">${r.note||''}</span>`}</td>
     <td>${hasHistory
-      ? `<button class="btn-sm" style="background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-300)!important;white-space:nowrap" onclick="window._openHistory(${r.id})">📋 ${r.history.length}건</button>`
+      ? `<button class="btn-sm" style="background:var(--green-light);color:var(--green);border:1.5px solid var(--green)!important;white-space:nowrap;font-weight:700" onclick="window._openHistory(${r.id})">📋 ${r.history.length}건</button>`
       : `<span style="font-size:11px;color:var(--gray-400)">-</span>`}</td>
   </tr>`;}).join('')}</tbody></table></div>`;
 }
@@ -1315,8 +1314,10 @@ function renderManage(reqs) {
   if (!filtered.length) { list.innerHTML=empty('📊', reqs.length?'조건에 맞는 요청이 없습니다':'요청 내역이 없습니다'); return; }
   list.innerHTML=`<div class="tbl-wrap"><table class="req-table"><thead><tr>
     <th style="width:32px"><input type="checkbox" id="chk-all" onchange="window._toggleAll(this)"></th>
-    <th>요청일시</th><th>발신</th><th>수신</th><th>요청종류</th><th>요청내용</th><th>상태</th><th>완료내용</th><th>관리</th>
-  </tr></thead><tbody>${filtered.map(r=>`<tr>
+    <th>요청일시</th><th>발신</th><th>수신</th><th>요청종류</th><th>요청내용</th><th>상태</th><th>완료내용</th><th>히스토리</th><th>관리</th>
+  </tr></thead><tbody>${filtered.map(r=>{
+    const hasHistory = r.history && r.history.length > 0;
+    return `<tr>
     <td><input type="checkbox" class="row-chk" data-id="${r.id}"></td>
     <td style="font-size:12px;color:var(--gray-500);white-space:nowrap">${r.createdAt}</td>
     <td>${badge('badge-coral',r.senderCompany)}</td>
@@ -1325,8 +1326,12 @@ function renderManage(reqs) {
     <td style="max-width:130px;font-size:13px">${r.detail}</td>
     <td>${statusBadge(r.status)}</td>
     <td style="font-size:12px;color:var(--gray-500);max-width:110px">${r.note||'-'}</td>
+    <td>${hasHistory
+      ? `<button class="btn-sm" style="background:var(--green-light);color:var(--green);border:1.5px solid var(--green)!important;white-space:nowrap;font-weight:700" onclick="window._openHistory(${r.id})">📋 ${r.history.length}건</button>`
+      : `<span style="font-size:11px;color:var(--gray-400)">-</span>`}</td>
     <td><button class="btn-sm btn-del" onclick="window._delReq(${r.id})">삭제</button></td>
-  </tr>`).join('')}</tbody></table></div>
+  </tr>`;}
+).join('')}</tbody></table></div>
   <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-200)">
     <button onclick="window._delSelected()" style="padding:8px 16px;background:white;color:#c62828;border:1.5px solid #c62828;border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">선택 삭제</button>
     <span style="font-size:12px;color:var(--gray-400)">체크박스로 여러 건 선택 후 한번에 삭제</span>
