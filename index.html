@@ -269,6 +269,26 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
           <div class="card-title" style="margin-bottom:0">요청 목록</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <select id="recv-sender-filter" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white">
+              <option value="">발신 업체</option>
+              <option value="ACE">ACE</option>
+              <option value="TOP">TOP</option>
+              <option value="그린피플_상담">그린피플_상담</option>
+              <option value="그린피플_채팅">그린피플_채팅</option>
+            </select>
+            <select id="recv-type-filter" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white">
+              <option value="">요청 종류</option>
+              <option value="쿠폰/상품권 재발급">쿠폰/상품권 재발급</option>
+              <option value="오류문의">오류문의</option>
+              <option value="비실물기프트 문의">비실물기프트 문의</option>
+              <option value="이벤트 응모내역 확인">이벤트 응모내역 확인</option>
+              <option value="마케팅동의 제외">마케팅동의 제외</option>
+              <option value="개통/적격 요청">개통/적격 요청</option>
+              <option value="당일출고요청">당일출고요청</option>
+              <option value="출고 가능여부 문의">출고 가능여부 문의</option>
+              <option value="수취거부 확인요청">수취거부 확인요청</option>
+              <option value="분실 확인요청">분실 확인요청</option>
+            </select>
             <select id="recv-status-filter" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white">
               <option value="">전체 상태</option>
               <option value="처리중">처리중</option>
@@ -288,6 +308,7 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
       <div class="tab-bar">
         <button class="tab-btn active" id="dual-tab-req" onclick="switchDualTab('dt-request', this)">📤 요청하기</button>
         <button class="tab-btn" id="dual-tab-recv" onclick="switchDualTab('dt-receive', this)">📋 PS&amp;M 수신 목록 <span class="t-badge" id="dual-recv-badge"></span></button>
+        <button class="tab-btn" id="dual-tab-dash" onclick="switchDualTab('dt-dashboard-dual', this)">📈 누적 현황판</button>
       </div>
       <!-- 탭 패널: 요청하기 -->
       <div id="dt-request" class="tab-panel active">
@@ -331,7 +352,78 @@ body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min
           <div class="stat-card"><div class="stat-label">처리 중</div><div class="stat-value" id="psm-st-pend" style="color:var(--coral)">0</div></div>
           <div class="stat-card"><div class="stat-label">완료</div><div class="stat-value" id="psm-st-done" style="color:var(--green)">0</div></div>
         </div>
-        <div class="card"><div class="card-title">요청 목록</div><div id="psm-recv-list"></div></div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+            <div class="card-title" style="margin-bottom:0">요청 목록</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <select id="psm-sender-filter" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white">
+                <option value="">발신 업체</option>
+                <option value="ACE">ACE</option>
+                <option value="TOP">TOP</option>
+                <option value="그린피플_상담">그린피플_상담</option>
+                <option value="그린피플_채팅">그린피플_채팅</option>
+              </select>
+              <select id="psm-type-filter" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white">
+                <option value="">요청 종류</option>
+                <option value="쿠폰/상품권 재발급">쿠폰/상품권 재발급</option>
+                <option value="오류문의">오류문의</option>
+                <option value="비실물기프트 문의">비실물기프트 문의</option>
+              </select>
+              <select id="psm-status-filter" style="padding:7px 12px;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;background:white">
+                <option value="">전체 상태</option>
+                <option value="처리중">처리중</option>
+                <option value="완료">완료</option>
+                <option value="반려">반려</option>
+              </select>
+              <button onclick="renderPsmRecv(window._requests||[])" style="padding:7px 14px;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">🔍 조회</button>
+              <button onclick="resetPsmRecvFilter()" style="padding:7px 14px;background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">초기화</button>
+            </div>
+          </div>
+          <div id="psm-recv-list"></div>
+        </div>
+      </div>
+    </div>
+    <!-- dual role 누적현황판 탭 -->
+    <div id="dt-dashboard-dual" class="tab-panel">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+          <div class="card-title" style="margin-bottom:0">📈 누적 요청 현황판</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button onclick="renderDualDashboard(window._requests||[])" style="padding:7px 14px;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer">🔍 조회</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px">
+          <div style="flex:1;min-width:200px;background:var(--blue-light);border-radius:var(--radius);padding:18px 20px;text-align:center">
+            <div style="font-size:12px;color:var(--blue);font-weight:700;margin-bottom:6px">전체 누적 요청</div>
+            <div id="dual-db-total" style="font-size:36px;font-weight:800;color:var(--blue)">0</div>
+          </div>
+          <div style="flex:1;min-width:200px;background:var(--coral-light);border-radius:var(--radius);padding:18px 20px;text-align:center">
+            <div style="font-size:12px;color:var(--coral);font-weight:700;margin-bottom:6px">처리 중</div>
+            <div id="dual-db-pend" style="font-size:36px;font-weight:800;color:var(--coral)">0</div>
+          </div>
+          <div style="flex:1;min-width:200px;background:var(--green-light);border-radius:var(--radius);padding:18px 20px;text-align:center">
+            <div style="font-size:12px;color:var(--green);font-weight:700;margin-bottom:6px">완료</div>
+            <div id="dual-db-done" style="font-size:36px;font-weight:800;color:var(--green)">0</div>
+          </div>
+          <div style="flex:1;min-width:200px;background:var(--amber-light);border-radius:var(--radius);padding:18px 20px;text-align:center">
+            <div style="font-size:12px;color:var(--amber);font-weight:700;margin-bottom:6px">반려</div>
+            <div id="dual-db-rej" style="font-size:36px;font-weight:800;color:var(--amber)">0</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:12px">📦 요청업체별 현황</div>
+            <div id="dual-db-by-company"></div>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:12px">📋 요청유형별 현황</div>
+            <div id="dual-db-by-type"></div>
+          </div>
+        </div>
+        <div style="margin-top:20px">
+          <div style="font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:12px">👤 요청자별 현황 (Top 10)</div>
+          <div id="dual-db-by-sender"></div>
+        </div>
       </div>
     </div>
     <!-- PS&M 수신 페이지 더미 (하위 호환 - page-psm-receive ID 유지) -->
@@ -1101,11 +1193,20 @@ function renderMyReqs(reqs) {
 function renderRecv(reqs) {
   const mine = reqs.filter(r => r.receiver === CU.company);
   
-  // ★ 상태 필터 적용
+  // ★ 발신업체/요청종류/상태 필터 적용
+  const senderFilter = el('recv-sender-filter')?.value || '';
+  const typeFilter = el('recv-type-filter')?.value || '';
   const statusFilter = el('recv-status-filter')?.value || '';
+  
   let filtered = mine;
+  if (senderFilter) {
+    filtered = filtered.filter(r => r.senderCompany === senderFilter);
+  }
+  if (typeFilter) {
+    filtered = filtered.filter(r => r.type === typeFilter);
+  }
   if (statusFilter) {
-    filtered = mine.filter(r => r.status === statusFilter);
+    filtered = filtered.filter(r => r.status === statusFilter);
   }
   
   const done = filtered.filter(r => r.status === '완료').length;
@@ -1117,7 +1218,7 @@ function renderRecv(reqs) {
   if (!filtered.length) { list.innerHTML = empty('✅', mine.length ? '조건에 맞는 요청이 없습니다' : '현재 받은 요청이 없습니다'); return; }
   const now = Date.now();
   list.innerHTML = `<div class="tbl-wrap"><table class="req-table"><thead><tr>
-    <th>요청일시</th><th>업체명</th><th>담당자</th><th>요청종류</th><th>요청내용</th><th>상태</th><th>처리</th>
+    <th>요청일시</th><th>업체명</th><th>담당자</th><th>요청종류</th><th>요청내용</th><th>상태</th><th>처리</th><th>히스토리</th>
   </tr></thead><tbody>${filtered.map(r=>{
     const canResend = r.status==='처리중' && (now - r.id) >= 3600000;
     const hasHistory = r.history && r.history.length > 0;
@@ -1126,7 +1227,7 @@ function renderRecv(reqs) {
     <td>${badge('badge-coral', r.senderCompany)}</td>
     <td style="font-size:13px">${r.sender}</td>
     <td style="white-space:nowrap">${r.type}</td>
-    <td style="max-width:180px;font-size:13px;cursor:pointer;color:var(--blue);text-decoration:underline" onclick="window._openHistory(${r.id})" title="클릭하면 히스토리 보기">${r.detail}${hasHistory ? ` <span style="font-weight:700">[+${r.history.length}건]</span>` : ''}</td>
+    <td style="max-width:180px;font-size:13px">${r.detail}</td>
     <td>${statusBadge(r.status)}</td>
     <td>${r.status==='처리중'
       ? `<div style="display:flex;gap:4px;flex-wrap:wrap">
@@ -1137,11 +1238,16 @@ function renderRecv(reqs) {
       : r.status==='반려'
         ? `<span class="badge badge-coral">반려됨</span>`
         : `<span style="font-size:12px;color:var(--gray-500)">${r.note||''}</span>`}</td>
+    <td>${hasHistory
+      ? `<button class="btn-sm" style="background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-300)!important;white-space:nowrap" onclick="window._openHistory(${r.id})">📋 ${r.history.length}건</button>`
+      : `<span style="font-size:11px;color:var(--gray-400)">-</span>`}</td>
   </tr>`;}).join('')}</tbody></table></div>`;
 }
 
 // ★ 수신 필터 초기화 함수
 function resetRecvFilter() {
+  el('recv-sender-filter').value = '';
+  el('recv-type-filter').value = '';
   el('recv-status-filter').value = '';
   renderRecv(window._requests||[]);
 }
@@ -1149,17 +1255,35 @@ function resetRecvFilter() {
 /* PS&M 수신처리 전용 — receiver=PSM 인 요청만, 완료처리 가능 */
 function renderPsmRecv(reqs) {
   const mine = reqs.filter(r => r.receiver === 'PSM');
-  const done = mine.filter(r => r.status === '완료').length;
-  el('psm-st-total').textContent = mine.length;
-  el('psm-st-pend').textContent  = mine.filter(r=>r.status==='처리중').length;
+  
+  // ★ 발신업체/요청종류/상태 필터 적용
+  const senderFilter = el('psm-sender-filter')?.value || '';
+  const typeFilter = el('psm-type-filter')?.value || '';
+  const statusFilter = el('psm-status-filter')?.value || '';
+  
+  let filtered = mine;
+  if (senderFilter) {
+    filtered = filtered.filter(r => r.senderCompany === senderFilter);
+  }
+  if (typeFilter) {
+    filtered = filtered.filter(r => r.type === typeFilter);
+  }
+  if (statusFilter) {
+    filtered = filtered.filter(r => r.status === statusFilter);
+  }
+  
+  const done = filtered.filter(r => r.status === '완료').length;
+  el('psm-st-total').textContent = filtered.length;
+  el('psm-st-pend').textContent  = filtered.filter(r=>r.status==='처리중').length;
   el('psm-st-done').textContent  = done;
   const list = el('psm-recv-list');
-  if (!mine.length) { list.innerHTML = empty('✅','PS&M으로 접수된 요청이 없습니다'); return; }
+  if (!filtered.length) { list.innerHTML = empty('✅', mine.length ? '조건에 맞는 요청이 없습니다' : 'PS&M으로 접수된 요청이 없습니다'); return; }
   const now = Date.now();
   list.innerHTML = `<div class="tbl-wrap"><table class="req-table"><thead><tr>
-    <th>요청일시</th><th>발신업체</th><th>담당자</th><th>요청종류</th><th>요청내용</th><th>고객정보</th><th>상태</th><th>처리</th>
-  </tr></thead><tbody>${mine.map(r=>{
+    <th>요청일시</th><th>발신업체</th><th>담당자</th><th>요청종류</th><th>요청내용</th><th>고객정보</th><th>상태</th><th>처리</th><th>히스토리</th>
+  </tr></thead><tbody>${filtered.map(r=>{
     const canResend = r.status==='처리중' && (now - r.id) >= 3600000;
+    const hasHistory = r.history && r.history.length > 0;
     return `<tr>
     <td style="font-size:12px;color:var(--gray-500);white-space:nowrap">${r.createdAt}</td>
     <td>${badge('badge-coral', r.senderCompany)}</td>
@@ -1177,7 +1301,18 @@ function renderPsmRecv(reqs) {
       : r.status==='반려'
         ? `<span class="badge badge-coral">반려됨</span>`
         : `<span style="font-size:12px;color:var(--gray-500)">${r.note||''}</span>`}</td>
+    <td>${hasHistory
+      ? `<button class="btn-sm" style="background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-300)!important;white-space:nowrap" onclick="window._openHistory(${r.id})">📋 ${r.history.length}건</button>`
+      : `<span style="font-size:11px;color:var(--gray-400)">-</span>`}</td>
   </tr>`;}).join('')}</tbody></table></div>`;
+}
+
+// ★ PS&M 수신 필터 초기화 함수
+function resetPsmRecvFilter() {
+  el('psm-sender-filter').value = '';
+  el('psm-type-filter').value = '';
+  el('psm-status-filter').value = '';
+  renderPsmRecv(window._requests||[]);
 }
 
 function renderManage(reqs) {
@@ -1681,6 +1816,48 @@ function renderDashboard(reqs) {
   el('db-by-sender').innerHTML  = total ? barChart(top10, '--coral') : '<div style="color:var(--gray-400);font-size:13px">데이터 없음</div>';
 }
 
+/* ★ Dual Role 누적현황판 (PSNM 사용자용) */
+function renderDualDashboard(reqs) {
+  // PSNM 회사로 보낸 요청 + PSM으로 받은 요청
+  const filteredReqs = reqs.filter(r => r.senderCompany === 'PSNM' || r.receiver === 'PSM');
+  
+  const total = filteredReqs.length;
+  const pend  = filteredReqs.filter(r=>r.status==='처리중').length;
+  const done  = filteredReqs.filter(r=>r.status==='완료').length;
+  const rej   = filteredReqs.filter(r=>r.status==='반려').length;
+  el('dual-db-total').textContent = total;
+  el('dual-db-pend').textContent  = pend;
+  el('dual-db-done').textContent  = done;
+  el('dual-db-rej').textContent   = rej;
+
+  function barChart(map, colorVar) {
+    const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+    const max = entries[0]?.[1] || 1;
+    return entries.map(([k,v])=>`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="width:110px;font-size:12px;color:var(--gray-700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${k}">${k}</div>
+        <div style="flex:1;background:var(--gray-100);border-radius:4px;overflow:hidden;height:18px">
+          <div style="height:100%;background:var(${colorVar});border-radius:4px;width:${Math.round(v/max*100)}%;transition:width .4s"></div>
+        </div>
+        <div style="width:30px;text-align:right;font-size:13px;font-weight:700;color:var(--gray-800)">${v}</div>
+      </div>`).join('');
+  }
+
+  const byCompany = {};
+  filteredReqs.forEach(r=> {
+    const company = r.senderCompany === 'PSNM' ? r.senderCompany : r.receiver;
+    byCompany[company] = (byCompany[company]||0) + 1;
+  });
+  
+  const byType    = {}; filteredReqs.forEach(r=>{ byType[r.type]=(byType[r.type]||0)+1; });
+  const bySender  = {}; filteredReqs.forEach(r=>{ const k=`${r.sender} (${r.senderCompany})`; bySender[k]=(bySender[k]||0)+1; });
+
+  el('dual-db-by-company').innerHTML = total ? barChart(byCompany, '--blue') : '<div style="color:var(--gray-400);font-size:13px">데이터 없음</div>';
+  el('dual-db-by-type').innerHTML    = total ? barChart(byType, '--green') : '<div style="color:var(--gray-400);font-size:13px">데이터 없음</div>';
+  const top10 = Object.fromEntries(Object.entries(bySender).sort((a,b)=>b[1]-a[1]).slice(0,10));
+  el('dual-db-by-sender').innerHTML  = total ? barChart(top10, '--coral') : '<div style="color:var(--gray-400);font-size:13px">데이터 없음</div>';
+}
+
 /* ══════════════════════════════════════
    3. 수신업체별 메일 수신자 관리
 ══════════════════════════════════════ */
@@ -1852,9 +2029,12 @@ window.switchTab       = switchTab;
 window.switchDualTab   = switchDualTab;
 window.renderManage    = renderManage;
 window.renderRecv      = renderRecv;
+window.renderPsmRecv   = renderPsmRecv;
 window.renderDashboard = renderDashboard;
+window.renderDualDashboard = renderDualDashboard;
 window.resetManageFilters = resetManageFilters;
 window.resetRecvFilter = resetRecvFilter;
+window.resetPsmRecvFilter = resetPsmRecvFilter;
 window.resetDashboardFilter = resetDashboardFilter;
 window.confirmComplete = confirmComplete;
 window.confirmReject   = confirmReject;
